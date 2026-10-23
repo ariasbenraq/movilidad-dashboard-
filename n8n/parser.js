@@ -259,7 +259,7 @@ function parseMovilidad(text) {
   return {
     fecha_form: parseDate(fechaBlock),
     costo_movilidad: readAmount(costoBlock, 'costo_movilidad', 0),
-    otros_gastos: readAmount(otrosGastosBlock, 'otros_gastos', null),
+    otros_gastos: readAmount(otrosGastosBlock, 'otros_gastos', 0),
     otros_detalle: firstValue(otrosDetalleBlock),
     he_inicio: parseTime(heInicioBlock),
     he_fin: parseTime(heFinBlock),

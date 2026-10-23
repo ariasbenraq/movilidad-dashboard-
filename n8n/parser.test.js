@@ -290,8 +290,31 @@ test('out-of-range overtime becomes null', () => {
 test('hospedaje amount is never read as otros_gastos', () => {
   const output = parseMovilidad(fixture05);
   assert.ok(fixture05.includes('4.5'));
-  assert.equal(output.otros_gastos, null);
+  assert.equal(output.otros_gastos, 0);
   assert.equal(output.otros_detalle, null);
+});
+
+test('absent otros_gastos becomes 0', () => {
+  const text = readFixture('01-costo');
+  assert.equal(parseMovilidad(text).otros_gastos, 0);
+});
+
+test('present but empty otros_gastos becomes 0', () => {
+  const text = replaceSection(
+    fixture02,
+    'Especificar MONTO DE OTROS GASTOS',
+    'Especificar detalle de OTROS GASTOS',
+    '',
+  );
+  assert.equal(parseMovilidad(text).otros_gastos, 0);
+});
+
+test('absent costo_movilidad becomes 0', () => {
+  const text = fixture03.replace(
+    /Especificar COSTO DE MOVILIDAD[\s\S]*?(?=Para taxi)/,
+    '',
+  );
+  assert.equal(parseMovilidad(text).costo_movilidad, 0);
 });
 
 test('keeps a MISCELANEO workorder exactly as written', () => {

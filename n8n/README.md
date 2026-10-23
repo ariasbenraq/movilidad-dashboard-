@@ -14,6 +14,10 @@ npm test
 The tests read the valid `NN-*.txt` + `NN-*.expected.json` pairs directly from
 `../fixtures` and also cover synthetic edge cases in code.
 
+`costo_movilidad` and `otros_gastos` are always numbers: a label that is absent
+or present but empty becomes `0`. Non-numeric amount content throws
+`INVALID_AMOUNT`. Blank or incomplete overtime times become `null`.
+
 ## Use in an n8n Code node
 
 Paste the full contents of `parser.js` into the Code node, then call
