@@ -34,8 +34,19 @@ function readExpected(baseName) {
 }
 
 function discoverPairs() {
-  return fs
-    .readdirSync(FIXTURES_DIR)
+  let fileNames;
+
+  try {
+    fileNames = fs.readdirSync(FIXTURES_DIR);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return fileNames
     .map((fileName) => {
       const match = /^(\d{2}-.+)\.txt$/.exec(fileName);
       if (!match) {
@@ -83,7 +94,7 @@ const validPairs = pairs.filter((pair) => pair.hasExpected);
 test('fixtures contain at least one valid pair', () => {
   assert.ok(
     validPairs.length >= 1,
-    `No valid NN-name.txt + NN-name.expected.json pairs were found in ${FIXTURES_DIR}`,
+    'No valid fixture pairs found in fixtures/ (expected NN-name.txt + NN-name.expected.json)',
   );
 });
 
@@ -154,11 +165,13 @@ for (const pair of validPairs) {
   });
 }
 
-const fixture03 = readFixture('03-costo-otros');
-const fixture02 = readFixture('02-costo-he');
-const fixture05 = readFixture('05-costo-hosp');
+const fixturesAvailable = validPairs.length > 0;
+const fixture03 = fixturesAvailable ? readFixture('03-costo-otros') : '';
+const fixture02 = fixturesAvailable ? readFixture('02-costo-he') : '';
+const fixture05 = fixturesAvailable ? readFixture('05-costo-hosp') : '';
+const fixtureTest = fixturesAvailable ? test : test.skip;
 
-test('extracts the informational fields from the fixtures', () => {
+fixtureTest('extracts the informational fields from the fixtures', () => {
   const cases = [
     {
       baseName: '01-costo',
@@ -212,19 +225,19 @@ test('extracts the informational fields from the fixtures', () => {
   }
 });
 
-test('handles CRLF line endings', () => {
+fixtureTest('handles CRLF line endings', () => {
   const output = parseMovilidad(fixture03.replace(/\n/g, '\r\n'));
   assert.deepEqual(output, parseMovilidad(fixture03));
 });
 
-test('handles non-breaking spaces and tabs', () => {
+fixtureTest('handles non-breaking spaces and tabs', () => {
   const withNbsp = fixture03.replace(/ /g, '\u00a0');
   const withTabs = fixture03.replace(/ {2,}/g, '\t');
   assert.deepEqual(parseMovilidad(withNbsp), parseMovilidad(fixture03));
   assert.deepEqual(parseMovilidad(withTabs), parseMovilidad(fixture03));
 });
 
-test('accepts a decimal comma', () => {
+fixtureTest('accepts a decimal comma', () => {
   const text = replaceSection(
     fixture03,
     'Especificar COSTO DE MOVILIDAD',
@@ -234,7 +247,7 @@ test('accepts a decimal comma', () => {
   assert.equal(parseMovilidad(text).costo_movilidad, 29.9);
 });
 
-test('rounds half-up using decimal digits, not float toFixed', () => {
+fixtureTest('rounds half-up using decimal digits, not float toFixed', () => {
   const text = replaceSection(
     fixture03,
     'Especificar COSTO DE MOVILIDAD',
@@ -244,7 +257,7 @@ test('rounds half-up using decimal digits, not float toFixed', () => {
   assert.equal(parseMovilidad(text).costo_movilidad, 12.35);
 });
 
-test('blank overtime times become null', () => {
+fixtureTest('blank overtime times become null', () => {
   let text = replaceSection(
     fixture02,
     'GENERACION DE HORAS H. EXTRA - Hora de inicio',
@@ -263,7 +276,7 @@ test('blank overtime times become null', () => {
   assert.equal(output.he_fin, null);
 });
 
-test('incomplete overtime (hour without minute) becomes null', () => {
+fixtureTest('incomplete overtime (hour without minute) becomes null', () => {
   const text = replaceSection(
     fixture02,
     'GENERACION DE HORAS H. EXTRA - Hora de inicio',
@@ -276,7 +289,7 @@ test('incomplete overtime (hour without minute) becomes null', () => {
   assert.equal(output.he_fin, '16:30');
 });
 
-test('out-of-range overtime becomes null', () => {
+fixtureTest('out-of-range overtime becomes null', () => {
   const text = replaceSection(
     fixture02,
     'GENERACION DE HORAS H. EXTRA - Hora de inicio',
@@ -287,19 +300,19 @@ test('out-of-range overtime becomes null', () => {
   assert.equal(parseMovilidad(text).he_inicio, null);
 });
 
-test('hospedaje amount is never read as otros_gastos', () => {
+fixtureTest('hospedaje amount is never read as otros_gastos', () => {
   const output = parseMovilidad(fixture05);
   assert.ok(fixture05.includes('4.5'));
   assert.equal(output.otros_gastos, 0);
   assert.equal(output.otros_detalle, null);
 });
 
-test('absent otros_gastos becomes 0', () => {
+fixtureTest('absent otros_gastos becomes 0', () => {
   const text = readFixture('01-costo');
   assert.equal(parseMovilidad(text).otros_gastos, 0);
 });
 
-test('present but empty otros_gastos becomes 0', () => {
+fixtureTest('present but empty otros_gastos becomes 0', () => {
   const text = replaceSection(
     fixture02,
     'Especificar MONTO DE OTROS GASTOS',
@@ -309,7 +322,7 @@ test('present but empty otros_gastos becomes 0', () => {
   assert.equal(parseMovilidad(text).otros_gastos, 0);
 });
 
-test('absent costo_movilidad becomes 0', () => {
+fixtureTest('absent costo_movilidad becomes 0', () => {
   const text = fixture03.replace(
     /Especificar COSTO DE MOVILIDAD[\s\S]*?(?=Para taxi)/,
     '',
@@ -317,12 +330,12 @@ test('absent costo_movilidad becomes 0', () => {
   assert.equal(parseMovilidad(text).costo_movilidad, 0);
 });
 
-test('keeps a MISCELANEO workorder exactly as written', () => {
+fixtureTest('keeps a MISCELANEO workorder exactly as written', () => {
   const text = fixture05.replace('W607021502', 'MISCELANEO');
   assert.equal(parseMovilidad(text).workorder, 'MISCELANEO');
 });
 
-test('throws MISSING_DATE when the FECHA FORMS block is absent', () => {
+fixtureTest('throws MISSING_DATE when the FECHA FORMS block is absent', () => {
   const text = fixture03.replace(
     /Ingresar # FECHA FORMS \*[\s\S]*?(?=Seleccionar Legajo \*)/,
     '',
@@ -330,7 +343,7 @@ test('throws MISSING_DATE when the FECHA FORMS block is absent', () => {
   assertErrorCode(text, 'MISSING_DATE');
 });
 
-test('throws INVALID_DATE for a real-looking but impossible date', () => {
+fixtureTest('throws INVALID_DATE for a real-looking but impossible date', () => {
   const text = replaceSection(
     fixture03,
     'Ingresar # FECHA FORMS *',
@@ -340,7 +353,7 @@ test('throws INVALID_DATE for a real-looking but impossible date', () => {
   assertErrorCode(text, 'INVALID_DATE');
 });
 
-test('throws INVALID_AMOUNT for non-numeric amount content', () => {
+fixtureTest('throws INVALID_AMOUNT for non-numeric amount content', () => {
   const text = replaceSection(
     fixture03,
     'Especificar COSTO DE MOVILIDAD',
@@ -350,7 +363,7 @@ test('throws INVALID_AMOUNT for non-numeric amount content', () => {
   assertErrorCode(text, 'INVALID_AMOUNT');
 });
 
-test('throws INVALID_AMOUNT for ambiguous thousands separators', () => {
+fixtureTest('throws INVALID_AMOUNT for ambiguous thousands separators', () => {
   for (const value of ['1,234.50', '1.234,50']) {
     const text = replaceSection(
       fixture03,
