@@ -1,0 +1,293 @@
+Formularios de Google
+
+
+Gracias por rellenar este formulario: FORMULARIO GASTOS DE MOVILIDAD
+
+
+Has recibido este correo porque has rellenado el siguiente formulario con  
+tu dirección de correo. This form is owned by Iderka Peru. Asegúrate de que  
+reconoces este formulario y confías en él antes de copiar o hacer clic en  
+cualquier enlace. Si te parece sospechoso, denunciarlo.
+
+Esto es lo que se recibió.
+
+
+FORMULARIO GASTOS DE MOVILIDAD
+
+
+Correo *
+
+
+correo@example.com
+
+
+Ingresar # FECHA FORMS *
+
+
+DD
+
+07
+
+
+/
+
+
+MM
+
+08
+
+
+/
+
+
+AAAA
+
+2026
+
+
+Seleccionar Legajo *
+
+
+XXXXXXXX
+
+
+
+Tipo Transporte *
+
+
+Movilidad Taxi
+
+
+Transporte Local (Bus Interprovincial u otros)
+
+
+Especificar DISTRITO o DEPARTAMENTO ORIGEN ej. "San Juan de Lurigancho"
+*
+
+
+San Borja
+
+
+Especificar Dirección: PUNTO DE PARTIDA
+*
+
+
+DIRECCION PARTIDA
+
+
+Especificar HORA INICIO de toma de movilidad *
+
+
+Hora
+
+
+18
+
+
+:
+
+
+40
+
+
+Especificar DISTRITO O DEPARTAMENTO DESTINO ej. "Villa el Salvador"
+*
+
+
+Jesus María
+
+
+Especificar Dirección: PUNTO DE LLEGADA
+*
+
+
+DIRECCION LLEGADA
+
+
+SELECCIONAR TIPOS DE GASTOS DE MOVILIDAD *
+
+
+Asociados a WORKORDER
+
+
+
+GASTOS MOVILIDAD ASOCIADO A UN WORKORDER
+
+
+Ingresar la Workorder Eje. "W409305291" o MISCELANEO *
+
+
+W607311610
+
+
+Descripción del Servicio Ejem: Error de lectora / Cambio de lectora /  
+Recojo de repuesto en Ag. Shalom / Entrega de Pick modulo a Rogers  
+Altamirano.
+
+
+Mantenimiento Preventivo
+
+
+Seleccionar STATUS de la WO
+
+
+CERRADO
+
+
+
+Ingresar # INFORME Eje. "688975" SINO EXISTE escriba "000000" *
+
+
+100753
+
+
+¿Tipo de atención? *
+
+
+Ruta
+
+
+
+Seleccionar CLIENTE
+
+
+BANCO DE CREDITO DEL PERU
+
+
+
+Tipo de traslado? *
+
+
+Traslado atención
+
+
+Retorno de atención
+
+
+Traslado de recurso
+
+
+Retorno de recurso
+
+
+Curso de Capacitacion
+
+
+Especificar COSTO DE MOVILIDAD
+*
+
+
+28.4
+
+
+Para taxi (NO confort) ADJUNTAR FOTOS de GPS Y COSTO
+
+
+Archivos enviados
+
+
+
+Image Screenshot_20260807_181822_Uber - NOMBRE.jpg
+
+
+SOLO PARA TRASLADO DE RECURSOS, cuantos recursos se TRASLADO o RETORNO
+
+
+SOLO PARA TRASLADO O RETORNO DE REPUESTO, especificar los RPTOS
+
+
+TIENES OTROS GASTOS? *
+
+
+SI, (GASTOS HOSPEDAJE, ALIMENTACION, OTROS Y H. EXTRAS)
+
+
+
+GASTOS DE HOSPEDAJE, ALIMENTACION, OTROS Y H. EXTRAS
+
+
+ESPECIFICAR MONTO DEL GASTO de hospedaje y alimentación
+
+
+Adjuntar Boleta o factura de alimentación y Hospedaje (SOLO DE ATENCION EN  
+RUTA)
+
+
+Ningún archivo entregado
+
+
+Especificar MONTO DE OTROS GASTOS
+
+
+16
+
+
+Especificar detalle de OTROS GASTOS (en que se gastó)
+
+
+Enchufe + cable de poder
+
+
+Adjuntar Boleta o factura de OTROS GASTOS
+
+
+Archivos enviados
+
+
+
+Image 20260808_084847 - NOMBRE.jpg
+
+
+Image 20260808_084529 - NOMBRE.jpg
+
+
+GENERACION DE HORAS H. EXTRA - Hora de inicio
+
+
+Hora
+
+
+17
+
+
+:
+
+
+00
+
+
+GENERACION DE HORAS H. EXTRA - Hora de final
+
+
+Hora
+
+
+18
+
+
+:
+
+
+30
+
+
+MOTIVO de HORAS EXTRAS
+
+
+Correctivo con el cable de poder del kiosko
+
+
+Múltiple Atención en Ruta ?
+
+
+Especificar las WORKORDERS de RUTA EJEM. "W409305291 - BANCO CONTINENTAL"
+
+
+W607311610 - Banco de Crédito
+
+
+Crea tu propio formulario de Google
+
+¿Parece sospechoso este formulario? Informe
+
+

@@ -1,0 +1,210 @@
+Formularios de Google
+
+
+Gracias por rellenar este formulario: FORMULARIO GASTOS DE MOVILIDAD
+
+
+Has recibido este correo porque has rellenado el siguiente formulario con  
+tu dirección de correo. This form is owned by Iderka Peru. Asegúrate de que  
+reconoces este formulario y confías en él antes de copiar o hacer clic en  
+cualquier enlace. Si te parece sospechoso, denunciarlo.
+
+Esto es lo que se recibió.
+
+
+FORMULARIO GASTOS DE MOVILIDAD
+
+
+Correo *
+
+
+correo@example.com
+
+
+Ingresar # FECHA FORMS *
+
+
+DD
+
+21
+
+
+/
+
+
+MM
+
+10
+
+
+/
+
+
+AAAA
+
+2026
+
+
+Seleccionar Legajo *
+
+
+XXXXXXXX
+
+
+
+Tipo Transporte *
+
+
+Movilidad Taxi
+
+
+Transporte Local (Bus Interprovincial u otros)
+
+
+Especificar DISTRITO o DEPARTAMENTO ORIGEN ej. "San Juan de Lurigancho"
+*
+
+
+Sjm
+
+
+Especificar Dirección: PUNTO DE PARTIDA
+*
+
+
+DIRECCION PARTIDA
+
+
+Especificar HORA INICIO de toma de movilidad *
+
+
+Hora
+
+
+15
+
+
+:
+
+
+00
+
+
+Especificar DISTRITO O DEPARTAMENTO DESTINO ej. "Villa el Salvador"
+*
+
+
+Jesus María
+
+
+Especificar Dirección: PUNTO DE LLEGADA
+*
+
+
+DIRECCION LLEGADA
+
+
+SELECCIONAR TIPOS DE GASTOS DE MOVILIDAD *
+
+
+Asociados a WORKORDER
+
+
+
+GASTOS MOVILIDAD ASOCIADO A UN WORKORDER
+
+
+Ingresar la Workorder Eje. "W409305291" o MISCELANEO *
+
+
+W610151086
+
+
+Descripción del Servicio Ejem: Error de lectora / Cambio de lectora /  
+Recojo de repuesto en Ag. Shalom / Entrega de Pick modulo a Rogers  
+Altamirano.
+
+
+Mantenimiento Preventivo
+
+
+Seleccionar STATUS de la WO
+
+
+CERRADO
+
+
+
+Ingresar # INFORME Eje. "688975" SINO EXISTE escriba "000000" *
+
+
+121593
+
+
+¿Tipo de atención? *
+
+
+Ruta
+
+
+
+Seleccionar CLIENTE
+
+
+BANCO DE CREDITO DEL PERU
+
+
+
+Tipo de traslado? *
+
+
+Traslado atención
+
+
+Retorno de atención
+
+
+Traslado de recurso
+
+
+Retorno de recurso
+
+
+Curso de Capacitacion
+
+
+Especificar COSTO DE MOVILIDAD
+*
+
+
+23.9
+
+
+Para taxi (NO confort) ADJUNTAR FOTOS de GPS Y COSTO
+
+
+Archivos enviados
+
+
+
+Image Screenshot_20261021_151544_Uber - NOMBRE.jpg
+
+
+SOLO PARA TRASLADO DE RECURSOS, cuantos recursos se TRASLADO o RETORNO
+
+
+SOLO PARA TRASLADO O RETORNO DE REPUESTO, especificar los RPTOS
+
+
+TIENES OTROS GASTOS? *
+
+
+NO
+
+
+
+Crea tu propio formulario de Google
+
+¿Parece sospechoso este formulario? Informe
+
+
