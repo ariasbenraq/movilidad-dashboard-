@@ -20,14 +20,18 @@ Subject: `Gracias por rellenar este formulario: FORMULARIO GASTOS DE MOVILIDAD`.
 | Field in email (label) | Parsed as | Notes |
 |---|---|---|
 | `FECHA FORMS` (DD / MM / AAAA) | `fecha_form` | Date of the expense. Required. |
-| `Especificar COSTO DE MOVILIDAD` | `costo_movilidad` | Optional. Label present but empty = 0. |
-| `Especificar MONTO DE OTROS GASTOS` | `otros_gastos` | Optional. Label present but empty = 0. |
+| `Especificar COSTO DE MOVILIDAD` | `costo_movilidad` | Optional. Label absent (the form can omit conditional sections) or present but empty = 0. Always a number, never null. |
+| `Especificar MONTO DE OTROS GASTOS` | `otros_gastos` | Optional. Label absent (the form can omit conditional sections) or present but empty = 0. Always a number, never null. |
 | `Especificar detalle de OTROS GASTOS` | `otros_detalle` | Optional free text. |
 | `GENERACION DE HORAS H. EXTRA - Hora de inicio` / `- Hora de final` | `he_inicio`, `he_fin` | Optional, `HH:MM`. A blank or incomplete time becomes `null`. |
 | `ESPECIFICAR MONTO DEL GASTO de hospedaje y alimentación` | not used | Must NOT be confused with otros gastos. |
 | workorder, cliente, tipo de traslado | `workorder`, `cliente`, `tipo_traslado` | Optional, informational. |
 
 The parser **throws** (it does not guess) when `fecha_form` is missing or not a valid date, or when an amount label contains non-numeric content. It returns amounts already rounded to 2 decimals.
+
+Accepted amount grammar: digits with an optional decimal part separated by `.` or `,` (`29`, `29.9`, `29,90`). A dot may carry more than two decimals (`12.345` rounds half-up to `12.35`, done with integer arithmetic, not floats). A comma followed by three or more digits (`1,234`), mixed separators (`1,234.50`, `1.234,50`) and anything non-numeric throw `INVALID_AMOUNT`.
+
+`tipo_traslado` is always `null`: the plain-text body lists every checkbox option without showing which one was selected. The field stays in the contract for a future source (for example the HTML body).
 
 Never stored: the sender email, employee ID (legajo), street addresses, districts, attachment names, raw body.
 
