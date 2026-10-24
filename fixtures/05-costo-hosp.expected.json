@@ -1,7 +1,7 @@
 {
   "fecha_form": "2026-07-13",
   "costo_movilidad": 8.2,
-  "otros_gastos": null,
-  "he_inicio": null,
-  "he_fin": null
+  "otros_gastos": 0,
+  "he_inicio": 0,
+  "he_fin": 0
 }

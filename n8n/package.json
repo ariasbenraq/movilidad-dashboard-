@@ -1,0 +1,10 @@
+{
+  "name": "movilidad-parser",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pure parser for FORMULARIO GASTOS DE MOVILIDAD receipt emails",
+  "main": "parser.js",
+  "scripts": {
+    "test": "node --test parser.test.js"
+  }
+}

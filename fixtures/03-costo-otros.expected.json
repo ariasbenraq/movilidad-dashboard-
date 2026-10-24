@@ -2,6 +2,6 @@
   "fecha_form": "2026-10-07",
   "costo_movilidad": 29.9,
   "otros_gastos": 6.5,
-  "he_inicio": null,
-  "he_fin": null
+  "he_inicio": 0,
+  "he_fin": 0
 }
