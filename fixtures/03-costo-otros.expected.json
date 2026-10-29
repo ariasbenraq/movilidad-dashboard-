@@ -2,6 +2,10 @@
   "fecha_form": "2026-10-07",
   "costo_movilidad": 29.9,
   "otros_gastos": 6.5,
+  "otros_detalle": "Isopos para mantenimiento de sensores",
   "he_inicio": null,
-  "he_fin": null
+  "he_fin": null,
+  "workorder": "W610052371",
+  "cliente": "BANCO DE CREDITO DEL PERU",
+  "tipo_traslado": null
 }
