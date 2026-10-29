@@ -1,0 +1,217 @@
+{
+  "name": "Movilidad - Ingesta",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Webhook movilidad",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "movilidad-ingesta",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "movilidad",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Parser",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "'use strict';\n\n// Pure function: plain-text body of the Google Forms receipt in, JSON out.\n// No dependencies; the file is pasted unchanged into the n8n Code node.\n\nconst PARSER_VERSION = '1.0.0';\n\n// Every label that can follow a value. A value ends at the next one of these.\nconst LABELS = [\n  /^Formularios de Google/i,\n  /^Ingresar # FECHA FORMS/i,\n  /^Seleccionar Legajo/i,\n  /^Tipo Transporte/i,\n  /^Especificar DISTRITO/i,\n  /^Especificar Direcci[oó]n/i,\n  /^Especificar HORA INICIO/i,\n  /^SELECCIONAR TIPOS DE GASTOS/i,\n  /^GASTOS MOVILIDAD ASOCIADO/i,\n  /^Ingresar la Workorder/i,\n  /^Descripci[oó]n del Servicio/i,\n  /^Seleccionar STATUS/i,\n  /^Ingresar # INFORME/i,\n  /^¿Tipo de atenci[oó]n/i,\n  /^Seleccionar CLIENTE/i,\n  /^Tipo de traslado/i,\n  /^Especificar COSTO DE MOVILIDAD/i,\n  /^Para taxi/i,\n  /^Archivos enviados/i,\n  /^Ning[uú]n archivo/i,\n  /^SOLO PARA TRASLADO/i,\n  /^TIENES OTROS GASTOS/i,\n  /^GASTOS DE HOSPEDAJE/i,\n  /^ESPECIFICAR MONTO DEL GASTO/i,\n  /^Adjuntar Boleta/i,\n  /^Especificar MONTO DE OTROS GASTOS/i,\n  /^Especificar detalle de OTROS GASTOS/i,\n  /^GENERACION DE HORAS H\\. EXTRA/i,\n  /^MOTIVO de HORAS EXTRAS/i,\n  /^M[uú]ltiple Atenci[oó]n/i,\n  /^Especificar las WORKORDERS/i,\n  /^Crea tu propio formulario/i,\n];\n\nconst L_FECHA = /^Ingresar # FECHA FORMS/i;\nconst L_COSTO = /^Especificar COSTO DE MOVILIDAD/i;\nconst L_OTROS_MONTO = /^Especificar MONTO DE OTROS GASTOS/i;\nconst L_OTROS_DETALLE = /^Especificar detalle de OTROS GASTOS/i;\nconst L_HE_INICIO = /^GENERACION DE HORAS H\\. EXTRA\\s*-\\s*Hora de inicio/i;\nconst L_HE_FIN = /^GENERACION DE HORAS H\\. EXTRA\\s*-\\s*Hora de final/i;\nconst L_WORKORDER = /^Ingresar la Workorder/i;\nconst L_CLIENTE = /^Seleccionar CLIENTE/i;\n\nfunction isLabel(line) {\n  return LABELS.some((re) => re.test(line));\n}\n\n// Lines of the section that follows the first line matching `label`,\n// up to the next known label. Lone \"*\" (required marker) lines are dropped.\nfunction section(lines, label) {\n  const start = lines.findIndex((line) => label.test(line));\n  if (start === -1) return null;\n  const out = [];\n  for (let i = start + 1; i < lines.length; i++) {\n    if (isLabel(lines[i])) break;\n    if (lines[i] !== '*') out.push(lines[i]);\n  }\n  return out;\n}\n\nfunction short(text) {\n  return text.length > 40 ? `${text.slice(0, 40)}...` : text;\n}\n\nfunction parseDate(lines) {\n  const sec = section(lines, L_FECHA);\n  if (!sec) throw new Error('fecha_form: label not found');\n  const m = /DD\\s+(\\d{1,2})\\s+\\/\\s+MM\\s+(\\d{1,2})\\s+\\/\\s+AAAA\\s+(\\d{4})/.exec(\n    sec.join(' '),\n  );\n  if (!m) throw new Error('fecha_form: day, month or year missing');\n  const day = Number(m[1]);\n  const month = Number(m[2]);\n  const year = Number(m[3]);\n  const d = new Date(Date.UTC(year, month - 1, day));\n  if (\n    d.getUTCFullYear() !== year ||\n    d.getUTCMonth() !== month - 1 ||\n    d.getUTCDate() !== day\n  ) {\n    throw new Error('fecha_form: not a valid calendar date');\n  }\n  const pad = (n) => String(n).padStart(2, '0');\n  return `${year}-${pad(month)}-${pad(day)}`;\n}\n\n// Missing label or empty value -> null (the backend reads null as 0).\nfunction parseAmount(lines, label, name) {\n  const sec = section(lines, label);\n  if (!sec) return null;\n  const raw = sec.find((line) => line !== '');\n  if (raw === undefined) return null;\n  const text = raw.replace(/^S\\/\\.?\\s*/i, '').replace(/\\s+/g, '');\n  let normalized;\n  if (/^\\d{1,3}(,\\d{3})+(\\.\\d+)?$/.test(text)) {\n    normalized = text.replace(/,/g, '');\n  } else if (/^\\d+([.,]\\d+)?$/.test(text)) {\n    normalized = text.replace(',', '.');\n  } else {\n    throw new Error(`${name}: not a number (\"${short(raw)}\")`);\n  }\n  return Math.round(Number(normalized) * 100) / 100;\n}\n\n// \"Hora / 17 / : / 00\" -> \"17:00\". Blank or incomplete -> null.\nfunction parseTime(lines, label, name) {\n  const sec = section(lines, label);\n  if (!sec) return null;\n  const m = /Hora\\s+(\\d{1,2})\\s*:\\s*(\\d{1,2})/.exec(sec.join(' '));\n  if (!m) return null;\n  const h = Number(m[1]);\n  const min = Number(m[2]);\n  if (h > 23 || min > 59) throw new Error(`${name}: time out of range`);\n  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;\n}\n\nfunction parseText(lines, label) {\n  const sec = section(lines, label);\n  if (!sec) return null;\n  const text = sec.filter((line) => line !== '').join(' ').trim();\n  return text === '' ? null : text;\n}\n\nfunction parse(body) {\n  if (typeof body !== 'string' || body.trim() === '') {\n    throw new Error('body: empty or not text');\n  }\n  const lines = body\n    .split(/\\r?\\n/)\n    .map((line) => line.replace(/\\s+/g, ' ').trim());\n\n  return {\n    fecha_form: parseDate(lines),\n    costo_movilidad: parseAmount(lines, L_COSTO, 'costo_movilidad'),\n    otros_gastos: parseAmount(lines, L_OTROS_MONTO, 'otros_gastos'),\n    otros_detalle: parseText(lines, L_OTROS_DETALLE),\n    he_inicio: parseTime(lines, L_HE_INICIO, 'he_inicio'),\n    he_fin: parseTime(lines, L_HE_FIN, 'he_fin'),\n    workorder: parseText(lines, L_WORKORDER),\n    cliente: parseText(lines, L_CLIENTE),\n    // The receipt lists every option, not only the chosen one.\n    tipo_traslado: null,\n    parser_version: PARSER_VERSION,\n  };\n}\n\nif (typeof module !== 'undefined' && module.exports) {\n  module.exports = { parse, PARSER_VERSION };\n}\n\n// --- n8n glue: Apps Script posts { messageId, receivedAt, body } ---\nconst req = $input.first().json.body || {};\ntry {\n  const fields = parse(req.body);\n  return [{ json: { ok: true, payload: { gmail_message_id: req.messageId, received_at: req.receivedAt, ...fields } } }];\n} catch (e) {\n  return [{ json: { ok: false, messageId: req.messageId, error: String(e.message) } }];\n}\n"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Parseo OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n4",
+      "name": "POST /ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        -100
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://movilidad-api.tudominio.com/ingest",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Mapear respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst s = r.statusCode;\nlet code = 502;\nif (s === 200 || s === 201) code = 200;\nelse if (s === 400) code = 422;\nconst status = code === 200 ? 'ok' : code === 422 ? 'rejected' : 'upstream_error';\nreturn [{ json: { code, body: { status } } }];\n"
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Responder resultado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1200,
+        -100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.code }}"
+        }
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Responder 422 (parser)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        120
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: \"parse_error\", error: $json.error } }}",
+        "options": {
+          "responseCode": 422
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook movilidad": {
+      "main": [
+        [
+          {
+            "node": "Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser": {
+      "main": [
+        [
+          {
+            "node": "Parseo OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parseo OK?": {
+      "main": [
+        [
+          {
+            "node": "POST /ingest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder 422 (parser)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /ingest": {
+      "main": [
+        [
+          {
+            "node": "Mapear respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear respuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
