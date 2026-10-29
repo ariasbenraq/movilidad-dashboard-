@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { envValidationSchema } from './config/env.validation.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
+import { IngestModule } from './ingest/ingest.module.js';
 import { RedisModule } from './redis/redis.module.js';
 
 @Module({
@@ -16,6 +17,7 @@ import { RedisModule } from './redis/redis.module.js';
     DatabaseModule,
     RedisModule,
     HealthModule,
+    IngestModule,
   ],
 })
 export class AppModule {}
