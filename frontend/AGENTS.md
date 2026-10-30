@@ -19,6 +19,15 @@ React, Vite, TypeScript (strict, no `any`), Tailwind, shadcn/ui components, Rech
 - Adapt names and logic to this domain. Do not bring pages that are not needed (chat, kanban, tasks, users, its auth pages).
 - If you reuse something almost literally, mark it with a comment saying it comes from shadcn-admin (MIT).
 
+## Second reference (visual inspiration only)
+
+`~/referencia/finance-dashboard` (third party, from `https://github.com/psykingko/finance-dashboard`). It has no known license, so:
+
+- Read it only to get ideas for screens: which charts, which cards, how the pages are arranged.
+- Do NOT copy code, components, styles, text or images from it, not even adapted line by line. Write everything from scratch in TypeScript.
+- Do not depend on it and never add it to this repository.
+- Ignore what does not apply here (role toggle, export menu, generic transactions).
+
 ## Where the rules of the business live
 
 In the backend. The frontend formats and displays: it never recomputes totals, periods, projections, paydays or the budget. The period is the full month (see `docs/decisiones.md`); there are no "quincenas". Pure UI helpers (currency and date formatting, chart data shaping, filters) go in their own files with unit tests, separate from components.
