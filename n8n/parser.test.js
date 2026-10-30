@@ -108,3 +108,34 @@ test('workflow.json embeds parser.js unchanged', () => {
     code.startsWith(fs.readFileSync(path.join(__dirname, 'parser.js'), 'utf8')),
   );
 });
+
+test('districts, addresses and start time are extracted', () => {
+  const r = parse(read('04-costo-otros-he.txt'));
+  assert.equal(r.distrito_origen, 'San Borja');
+  assert.equal(r.direccion_origen, 'DIRECCION PARTIDA');
+  assert.equal(r.distrito_destino, 'Jesus María');
+  assert.equal(r.direccion_destino, 'DIRECCION LLEGADA');
+  assert.equal(r.hora_inicio, '18:40');
+  assert.equal(r.he_inicio, '17:00');
+});
+
+test('blank district becomes null', () => {
+  const r = parse(read('04-costo-otros-he.txt').replace(/^San Borja$/m, ''));
+  assert.equal(r.distrito_origen, null);
+  assert.equal(r.distrito_destino, 'Jesus María');
+});
+
+test('blank and incomplete start time become null', () => {
+  const src = read('04-costo-otros-he.txt');
+  const half = parse(src.replace(/(Hora\s+18\s+:\s+)40/, '$1'));
+  assert.equal(half.hora_inicio, null);
+  const blank = parse(src.replace(/(HORA INICIO[^\n]*\n\s+Hora\s+)18\s+:\s+40/, '$1'));
+  assert.equal(blank.hora_inicio, null);
+});
+
+test('throws when the start time is out of range', () => {
+  assert.throws(
+    () => parse(read('04-costo-otros-he.txt').replace(/^18$/m, '25')),
+    /hora_inicio/,
+  );
+});

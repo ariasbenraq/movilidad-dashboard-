@@ -7,5 +7,10 @@
   "he_fin": null,
   "workorder": "W610052371",
   "cliente": "BANCO DE CREDITO DEL PERU",
+  "distrito_origen": "Chorrillos",
+  "direccion_origen": "DIRECCION PARTIDA",
+  "distrito_destino": "Jesus María",
+  "direccion_destino": "DIRECCION LLEGADA",
+  "hora_inicio": "15:30",
   "tipo_traslado": null
 }
