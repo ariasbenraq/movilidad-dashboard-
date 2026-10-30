@@ -62,6 +62,16 @@ export function heMinutos(
   return (((toMinutes(fin) - toMinutes(inicio)) % 1440) + 1440) % 1440;
 }
 
+/** Lowercase, no accents, single spaces: the key of distrito_equivalencias. */
+export function normalizeDistrito(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export interface ReviewInput {
   costoMovilidad: number;
   otrosGastos: number;
@@ -69,6 +79,7 @@ export interface ReviewInput {
   heFin: string | null;
   heMinutos: number;
   possibleDuplicate: boolean;
+  unknownDistrict: boolean;
 }
 
 /** Review codes in their fixed order, or null when nothing needs review. */
@@ -89,6 +100,7 @@ export function reviewReason(input: ReviewInput): string | null {
     flags.push('no_amounts');
   }
   if (input.possibleDuplicate) flags.push('possible_duplicate');
+  if (input.unknownDistrict) flags.push('unknown_district');
 
   return flags.length > 0 ? flags.join(',') : null;
 }

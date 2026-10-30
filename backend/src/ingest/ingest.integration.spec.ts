@@ -8,6 +8,7 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../app.module.js';
 import { REDIS_CLIENT } from '../redis/redis.constants.js';
 import { CreateMovilidadRegistros1761700000000 } from '../migrations/1761700000000-CreateMovilidadRegistros.js';
+import { ParserV21761800000000 } from '../migrations/1761800000000-ParserV2.js';
 
 const KEY = 'integration-test-key-0123456789abcdef0123';
 
@@ -26,7 +27,7 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('POST /ingest', () => {
     otros_detalle: 'Isopos',
     workorder: 'W610052371',
     cliente: 'BCP',
-    parser_version: '1.0.0',
+    parser_version: '2.0.0',
     ...over,
   });
 
@@ -55,9 +56,11 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('POST /ingest', () => {
     db = app.get(getDataSourceToken());
     redis = app.get(REDIS_CLIENT);
 
+    await db.query('DROP TABLE IF EXISTS distrito_equivalencias');
     await db.query('DROP TABLE IF EXISTS movilidad_registros');
     const qr = db.createQueryRunner();
     await new CreateMovilidadRegistros1761700000000().up(qr);
+    await new ParserV21761800000000().up(qr);
     await qr.release();
   });
 
@@ -67,6 +70,7 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('POST /ingest', () => {
 
   beforeEach(async () => {
     await db.query('TRUNCATE movilidad_registros RESTART IDENTITY');
+    await db.query('TRUNCATE distrito_equivalencias');
     const keys = await redis.keys('movilidad:v1:*');
     if (keys.length) await redis.del(...keys);
   });
@@ -92,6 +96,59 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('POST /ingest', () => {
       review_reason: null,
       needs_review: false,
     });
+  });
+
+  it('stores districts, addresses and hora_inicio', async () => {
+    const res = await post(
+      payload({
+        distrito_origen: ' Sjm ',
+        direccion_origen: 'DIRECCION PARTIDA',
+        distrito_destino: 'Jesús María',
+        direccion_destino: 'DIRECCION LLEGADA',
+        hora_inicio: '15:00',
+      }),
+    );
+    expect(res.status).toBe(201);
+    const [row] = await rows();
+    expect(row).toMatchObject({
+      distrito_origen: 'Sjm',
+      direccion_origen: 'DIRECCION PARTIDA',
+      distrito_destino: 'Jesús María',
+      direccion_destino: 'DIRECCION LLEGADA',
+      hora_inicio: '15:00:00',
+    });
+  });
+
+  it('maps districts through distrito_equivalencias', async () => {
+    await db.query(
+      `INSERT INTO distrito_equivalencias VALUES ('sjm','San Juan de Lurigancho'),('jesus maria','Jesus María')`,
+    );
+    await post(payload({ distrito_origen: 'Sjm', distrito_destino: 'Jesús María' }));
+    const [row] = await rows();
+    expect(row).toMatchObject({
+      distrito_origen_canon: 'San Juan de Lurigancho',
+      distrito_destino_canon: 'Jesus María',
+      review_reason: null,
+    });
+  });
+
+  it('flags unknown_district and leaves the canon column null', async () => {
+    await db.query(
+      `INSERT INTO distrito_equivalencias VALUES ('sjm','San Juan de Lurigancho')`,
+    );
+    await post(payload({ distrito_origen: 'Sjm', distrito_destino: 'Lugar raro' }));
+    const [row] = await rows();
+    expect(row).toMatchObject({
+      distrito_origen_canon: 'San Juan de Lurigancho',
+      distrito_destino_canon: null,
+      review_reason: 'unknown_district',
+    });
+  });
+
+  it('does not flag unknown_district when no district is sent', async () => {
+    await post(payload());
+    const [row] = await rows();
+    expect(row.review_reason).toBeNull();
   });
 
   it('treats missing or null amounts as 0 and flags no_amounts', async () => {
@@ -167,6 +224,9 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('POST /ingest', () => {
     ['date after tomorrow', { fecha_form: '2099-01-01' }],
     ['received_at without offset', { received_at: '2026-10-07T20:41:00' }],
     ['bad message id', { gmail_message_id: 'a b' }],
+    ['district too long', { distrito_origen: 'x'.repeat(101) }],
+    ['address too long', { direccion_destino: 'x'.repeat(201) }],
+    ['hora_inicio with seconds', { hora_inicio: '15:00:00' }],
     ['detail too long', { otros_detalle: 'x'.repeat(501) }],
     ['missing parser_version', { parser_version: undefined }],
   ])('rejects %s with 400 and does not echo the payload', async (_n, over) => {

@@ -6,7 +6,7 @@ const dto = {
   received_at: '2026-10-07T20:41:00-05:00',
   fecha_form: '2026-10-07',
   costo_movilidad: 10,
-  parser_version: '1.0.0',
+  parser_version: '2.0.0',
 } as IngestDto;
 
 describe('IngestService cache invalidation', () => {
