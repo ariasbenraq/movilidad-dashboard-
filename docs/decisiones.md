@@ -6,3 +6,14 @@
 - Días laborables: lunes a sabado   (feriados: tabla `feriados`)
 - Los otros gastos se pagan junto con la movilidad: sí
 - Proyección: acumulado + promedio por día con gasto × días laborables restantes
+- Período: el mes completo. Desde el día 1 se ve la suma acumulada; al cerrar el mes se conoce lo que se recibe el día 15 del mes siguiente. No hay quincenas.
+- Transporte: siempre taxi. Se guarda la hora de inicio del traslado.
+- Se guardan distrito y dirección exactas de salida y llegada (datos personales: solo visibles con login, nunca en el repositorio, fixtures reales ni logs).
+- "Site" = distrito de llegada. Visitas del año estimadas = visitas del año hasta hoy + visitas del mes actual × meses restantes del año.
+- Los distritos vienen como texto libre; una tabla de equivalencias mantenida por el dueño los normaliza. Los no reconocidos se marcan para revisión.
+- Mapas y distancias: OpenRouteService. No da tráfico en vivo: el tiempo en taxi se multiplica por un factor de tráfico configurable.
+- Presupuesto del mes siguiente: histórico por ruta (distrito de salida a distrito de llegada), promedio de los últimos 3 meses cerrados.
+- Bus: formulario propio para registrar gastos de bus. Es un cálculo paralelo para comparar con taxi; no sustituye ni modifica el cálculo de taxi.
+- Login: un solo usuario (el dueño), sesión de 7 días.
+- Dominios: frontend `mov.hamstitors.trade`, API `movilidad-api.hamstitors.trade`.
+- Reproceso: cuando el parser v2 esté desplegado, se vacía `movilidad_registros` y se reprocesan todos los correos, porque `/ingest` nunca actualiza filas existentes.
