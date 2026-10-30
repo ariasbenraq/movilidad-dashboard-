@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { classify_, pickPlainText_, buildQuery_ } = require('./Code.gs');
+const { classify_, pickPlainText_, buildQuery_, padBase64_ } = require('./Code.gs');
 
 test('classify_ follows the spec table', () => {
   assert.equal(classify_(200), 'ok');
@@ -37,4 +37,13 @@ test('buildQuery_ excludes both labels and respects the start date', () => {
   assert.match(q, /-label:procesado/);
   assert.match(q, /-label:movilidad-error/);
   assert.match(q, /after:2026\/01\/01/);
+});
+
+test('padBase64_ restores the padding Gmail strips', () => {
+  for (const text of ['a', 'ab', 'abc', 'abcd', 'Gracias por rellenar este formulario: ñandú']) {
+    const b64 = Buffer.from(text, 'utf8').toString('base64url'); // no padding
+    const padded = padBase64_(b64);
+    assert.equal(padded.length % 4, 0);
+    assert.equal(Buffer.from(padded, 'base64url').toString('utf8'), text);
+  }
 });

@@ -47,8 +47,13 @@ function buildQuery_(desde) {
   );
 }
 
+/** Gmail sends base64url without padding; Apps Script needs it. */
+function padBase64_(data) {
+  return data + '==='.slice((data.length + 3) % 4);
+}
+
 function decode_(data) {
-  return Utilities.newBlob(Utilities.base64DecodeWebSafe(data)).getDataAsString('UTF-8');
+  return Utilities.newBlob(Utilities.base64DecodeWebSafe(padBase64_(data))).getDataAsString('UTF-8');
 }
 
 function config_() {
@@ -175,5 +180,5 @@ function probarUno() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { classify_, pickPlainText_, buildQuery_ };
+  module.exports = { classify_, pickPlainText_, buildQuery_, padBase64_ };
 }
