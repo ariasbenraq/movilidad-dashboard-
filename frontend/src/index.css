@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Light mode (default) ── */
+:root {
+  --bg-page: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-elevated: #f8fafc;
+  --bg-input: #f1f5f9;
+  --bg-hover: rgba(0, 0, 0, 0.04);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-placeholder: #94a3b8;
+
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-input: rgba(0, 0, 0, 0.12);
+}
+
+/* ── Dark mode ── */
+.dark {
+  --bg-page: #0d1117;
+  --bg-card: #0f1623;
+  --bg-elevated: #111827;
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-placeholder: #64748b;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Semantic utility classes ── */
+@layer utilities {
+  .bg-page {
+    background-color: var(--bg-page);
+  }
+  .bg-card {
+    background-color: var(--bg-card);
+  }
+  .bg-elevated {
+    background-color: var(--bg-elevated);
+  }
+  .bg-input {
+    background-color: var(--bg-input);
+  }
+  .bg-hover:hover {
+    background-color: var(--bg-hover);
+  }
+
+  .text-primary {
+    color: var(--text-primary);
+  }
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  .border-subtle {
+    border-color: var(--border-subtle);
+  }
+  .border-input {
+    border-color: var(--border-input);
+  }
+}
+
+/* Smooth theme transition */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.15s ease;
+}
+/* But don't transition transforms/opacity (breaks animations) */
+[data-framer-motion],
+.motion-safe\:transition-none {
+  transition: none !important;
+}
