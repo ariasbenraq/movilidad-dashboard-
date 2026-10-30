@@ -24,19 +24,6 @@ function classify_(status) {
   return 'retry';
 }
 
-/** First text/plain part of a Gmail API payload, or null. */
-function pickPlainText_(payload, decode) {
-  if (!payload) return null;
-  if (payload.mimeType === 'text/plain' && payload.body && payload.body.data) {
-    return decode(payload.body.data);
-  }
-  for (const part of payload.parts || []) {
-    const text = pickPlainText_(part, decode);
-    if (text !== null) return text;
-  }
-  return null;
-}
-
 function buildQuery_(desde) {
   return (
     'from:' + FROM +
@@ -45,15 +32,6 @@ function buildQuery_(desde) {
     ' -label:' + LABEL_ERROR +
     ' after:' + desde
   );
-}
-
-/** Gmail sends base64url without padding; Apps Script needs it. */
-function padBase64_(data) {
-  return data + '==='.slice((data.length + 3) % 4);
-}
-
-function decode_(data) {
-  return Utilities.newBlob(Utilities.base64DecodeWebSafe(padBase64_(data))).getDataAsString('UTF-8');
 }
 
 function config_() {
@@ -91,10 +69,11 @@ function post_(cfg, messageId, receivedAt, body) {
 
 /** Returns 'ok' | 'rejected' | 'fatal' | 'retry' and labels the message. */
 function handleMessage_(id, cfg, labelIds) {
-  const message = Gmail.Users.Messages.get('me', id, { format: 'full' });
-  const body = pickPlainText_(message.payload, decode_);
+  const message = GmailApp.getMessageById(id);
+  const text = message.getPlainBody();
+  const body = text && text.trim() !== '' ? text : null;
   const receivedAt = Utilities.formatDate(
-    new Date(Number(message.internalDate)),
+    message.getDate(),
     TIMEZONE,
     "yyyy-MM-dd'T'HH:mm:ssXXX"
   );
@@ -180,5 +159,5 @@ function probarUno() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { classify_, pickPlainText_, buildQuery_, padBase64_ };
+  module.exports = { classify_, buildQuery_ };
 }
