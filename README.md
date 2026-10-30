@@ -71,5 +71,13 @@ The only source of truth for environment variables is the root `.env`
 `.env.example` for the full list. The backend validates these variables at
 startup and fails fast if any required value is missing or invalid.
 
+`INGEST_API_KEY` is required (at least 32 characters; the placeholder in
+`.env.example` is too short on purpose). Generate one with `openssl rand -hex 32`.
+Apply the schema with `npm run migration:run` from `backend/`.
+
+Integration tests for `POST /ingest` need a disposable Postgres and Redis (the
+table is truncated). Run them from `backend/` with `RUN_INTEGRATION=1` and the
+`DB_*`, `REDIS_*` and `INGEST_API_KEY` variables set; plain `npm run test` skips them.
+
 Database schema changes use TypeORM migrations; `synchronize` is disabled.
 The TypeORM CLI data source lives in `backend/src/database/data-source.ts`.

@@ -2,6 +2,10 @@
   "fecha_form": "2026-10-21",
   "costo_movilidad": 23.9,
   "otros_gastos": null,
+  "otros_detalle": null,
   "he_inicio": null,
-  "he_fin": null
+  "he_fin": null,
+  "workorder": "W610151086",
+  "cliente": "BANCO DE CREDITO DEL PERU",
+  "tipo_traslado": null
 }

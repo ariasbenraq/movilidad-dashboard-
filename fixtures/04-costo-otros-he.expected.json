@@ -2,6 +2,10 @@
   "fecha_form": "2026-08-07",
   "costo_movilidad": 28.4,
   "otros_gastos": 16,
+  "otros_detalle": "Enchufe + cable de poder",
   "he_inicio": "17:00",
-  "he_fin": "18:30"
+  "he_fin": "18:30",
+  "workorder": "W607311610",
+  "cliente": "BANCO DE CREDITO DEL PERU",
+  "tipo_traslado": null
 }

@@ -24,12 +24,19 @@ Subject: `Gracias por rellenar este formulario: FORMULARIO GASTOS DE MOVILIDAD`.
 | `Especificar MONTO DE OTROS GASTOS` | `otros_gastos` | Optional. Label present but empty = 0. |
 | `Especificar detalle de OTROS GASTOS` | `otros_detalle` | Optional free text. |
 | `GENERACION DE HORAS H. EXTRA - Hora de inicio` / `- Hora de final` | `he_inicio`, `he_fin` | Optional, `HH:MM`. A blank or incomplete time becomes `null`. |
+| `Especificar DISTRITO o DEPARTAMENTO ORIGEN` | `distrito_origen` | Free text. |
+| `Especificar Dirección: PUNTO DE PARTIDA` | `direccion_origen` | Free text. |
+| `Especificar DISTRITO O DEPARTAMENTO DESTINO` | `distrito_destino` | Free text. |
+| `Especificar Dirección: PUNTO DE LLEGADA` | `direccion_destino` | Free text. |
+| `Especificar HORA INICIO de toma de movilidad` | `hora_inicio` | Optional, `HH:MM`; blank or incomplete = `null`. Not the overtime hours. |
 | `ESPECIFICAR MONTO DEL GASTO de hospedaje y alimentación` | not used | Must NOT be confused with otros gastos. |
 | workorder, cliente, tipo de traslado | `workorder`, `cliente`, `tipo_traslado` | Optional, informational. |
 
 The parser **throws** (it does not guess) when `fecha_form` is missing or not a valid date, or when an amount label contains non-numeric content. It returns amounts already rounded to 2 decimals.
 
-Never stored: the sender email, employee ID (legajo), street addresses, districts, attachment names, raw body.
+Never stored: the sender email, employee ID (legajo), attachment names, raw body. Districts and street addresses ARE stored (see `decisiones.md`): they are personal data, so they are returned only to authenticated endpoints, never logged and never committed (fixtures stay anonymized). Transport is always taxi.
+
+Parser version for this contract: `2.0.0`.
 
 ## 4. Data model (PostgreSQL)
 
@@ -48,12 +55,16 @@ Never stored: the sender email, employee ID (legajo), street addresses, district
 | `he_inicio`, `he_fin` | time NULL | |
 | `he_minutos` | integer NOT NULL DEFAULT 0 | Derived server-side, see section 5. |
 | `workorder`, `cliente`, `tipo_traslado` | text NULL | |
+| `distrito_origen`, `distrito_destino` | text NULL | As written in the email, max 100 chars. |
+| `direccion_origen`, `direccion_destino` | text NULL | As written in the email, max 200 chars. |
+| `distrito_origen_canon`, `distrito_destino_canon` | text NULL | Canonical district from `distrito_equivalencias`; NULL when the text is not mapped. |
+| `hora_inicio` | time NULL | Start of the trip. |
 | `review_reason` | text NULL | Comma-separated review codes in fixed order; NULL when nothing to review. |
 | `needs_review` | boolean GENERATED ALWAYS AS (`review_reason` IS NOT NULL) STORED | Cannot drift from `review_reason`. |
 | `parser_version` | text NOT NULL | Max 20 chars. |
 | `created_at` | timestamptz NOT NULL DEFAULT now() | |
 
-Indexes: `(periodo)`, `(fecha_form)`, `(fecha_form, workorder)` (supports the duplicate check).
+Indexes: `(periodo)`, `(fecha_form)`, `(fecha_form, workorder)` (supports the duplicate check), `(distrito_destino_canon)`.
 
 ### `config` (key/value, text)
 
@@ -64,10 +75,28 @@ Indexes: `(periodo)`, `(fecha_form)`, `(fecha_form, workorder)` (supports the du
 | `pago_dia` | `15` | Day of the next month when the period is paid. |
 | `pago_fin_de_semana` | `next` | If payday is a weekend or holiday: `next` or `previous` business day. |
 | `tarifa_hora_extra` | (absent) | PEN per hour. If absent, overtime is reported in hours only. |
+| `factor_trafico` | `1.3` | Multiplier on the OpenRouteService taxi duration. |
+| `presupuesto_meses` | `3` | Closed months averaged for the budget. |
 
 ### `feriados`
 
 `fecha` date PK, `nombre` text. Loaded from the official Peruvian holiday list, never typed from memory.
+
+### `distrito_equivalencias`
+
+`texto_normalizado` text PK (lowercase, no accents, single spaces), `distrito` text NOT NULL (canonical name). Maintained by the owner. Ingest looks up `distrito_origen` and `distrito_destino` here; a miss leaves the `*_canon` column NULL and adds the review code `unknown_district`. Adding an equivalence re-derives the `*_canon` columns and the review flag of the affected rows (the only update that touches stored rows).
+
+### `users`
+
+`id` bigserial PK, `username` text UNIQUE NOT NULL, `password_hash` text NOT NULL (argon2id), `created_at` timestamptz. Single user, created from a CLI script; there is no public registration.
+
+### `bus_gastos` (v2)
+
+`id` bigserial PK, `fecha` date, `distrito_origen_canon` text, `distrito_destino_canon` text, `costo` numeric(10,2) CHECK between 0 and 500, `duracion_min` integer NULL CHECK between 1 and 600, `nota` text NULL (max 200), `created_at`. Entered by hand; never mixed into the taxi totals.
+
+### `rutas_cache` (v2)
+
+`origen_hash` + `destino_hash` (SHA-256 of the normalized addresses) PK, `distancia_m`, `duracion_s`, `geocode_confianza` numeric, `fetched_at`. Avoids repeating OpenRouteService calls for the same pair of addresses.
 
 ## 5. Ingestion: `POST /ingest`
 
@@ -88,7 +117,12 @@ Request body (JSON):
   "workorder": "W610052371",
   "cliente": "BCP",
   "tipo_traslado": null,
-  "parser_version": "1.0.0"
+  "distrito_origen": "San Juan de Lurigancho",
+  "direccion_origen": "(address)",
+  "distrito_destino": "Jesus Maria",
+  "direccion_destino": "(address)",
+  "hora_inicio": "15:00",
+  "parser_version": "2.0.0"
 }
 ```
 
@@ -104,6 +138,9 @@ Request body (JSON):
 | `he_inicio`, `he_fin` | no | `HH:MM` 24-hour, regex `^([01]\d\|2[0-3]):[0-5]\d$`; seconds are rejected |
 | `workorder` | no | string, max 50 |
 | `cliente`, `tipo_traslado` | no | string, max 100 |
+| `distrito_origen`, `distrito_destino` | no | string, max 100 |
+| `direccion_origen`, `direccion_destino` | no | string, max 200 |
+| `hora_inicio` | no | `HH:MM`, same rule as `he_inicio` |
 | `parser_version` | yes | string, 1–20 |
 
 Strings are trimmed and an empty string becomes `null`. Unknown fields are rejected with `400` (`forbidNonWhitelisted` on this endpoint).
@@ -123,6 +160,7 @@ Evaluated on every new row. All that apply are stored in `review_reason`, comma-
 | 2 | `invalid_overtime` | `he_inicio` equals `he_fin` (0 minutes stored; it is not read as 24 hours) |
 | 3 | `no_amounts` | `costo_movilidad` = 0 and `otros_gastos` = 0 and `he_minutos` = 0 (so partial or invalid overtime does not count as overtime and can combine with this flag) |
 | 4 | `possible_duplicate` | `workorder` is not null and a row with a different `gmail_message_id`, the same `fecha_form`, the same `workorder` and the same `costo_movilidad` (numeric equality) already exists. A null `workorder` never matches. Only the new row is flagged; the earlier row is not modified |
+| 5 | `unknown_district` | `distrito_origen` or `distrito_destino` is present but has no entry in `distrito_equivalencias` |
 
 Flagged rows still count in totals, and the dashboard shows how many need review.
 
@@ -153,7 +191,7 @@ Every error body uses Nest's default shape: `{ "statusCode": 400, "message": ["f
 
 ## 7. Read API
 
-All read endpoints take `periodo=YYYY-MM` (default: current month in `timezone`). In v1 they carry no application-level auth; access is restricted at the network level (Tailscale or Cloudflare Access).
+All read endpoints take `periodo=YYYY-MM` (default: current month in `timezone`) and require a session (see section 12). `/health` and `/ingest` are the exceptions. The exact request and response shapes live in `docs/api-contract.md`, which is the contract the frontend builds against.
 
 | Endpoint | Response |
 |---|---|
@@ -209,4 +247,12 @@ New form emails must show up in the dashboard almost immediately.
 
 ## 11. Out of scope for now
 
-User accounts and login, multiple users, multiple currencies, editing or deleting records from the dashboard, correcting a stored row by re-ingesting it, storing attachments, Gmail push (Pub/Sub).
+Multiple users, multiple currencies, editing or deleting records from the dashboard, correcting a stored row by re-ingesting it, storing attachments, Gmail push (Pub/Sub).
+
+## 12. Authentication
+
+Single owner account. `POST /auth/login` checks the argon2id hash and sets a session cookie: a JWT signed with `JWT_SECRET`, `httpOnly`, `Secure` (off only in development), `SameSite=Lax`, valid 7 days. All read endpoints verify it. CORS allows only `CORS_ORIGIN` (`https://mov.hamstitors.trade`) with credentials; the API and the frontend share the registrable domain `hamstitors.trade`, so the cookie travels. Login failures are limited per IP with Redis (5 per 15 minutes). `/ingest` keeps using `x-api-key`. No registration endpoint: the user is created with a CLI script.
+
+## 13. Route budget and time (v2)
+
+Budget for the next month = for every route (canonical origin district to canonical destination district) the average number of trips per month over the last 3 closed months times the average taxi cost of that route. Time = trips times the OpenRouteService driving duration (geocoded exact addresses of that route, from `rutas_cache`) multiplied by the configurable `factor_trafico`. Bus data comes only from `bus_gastos`; a route with no bus data is returned with `null` bus values and the total is marked `incompleto`. Env: `ORS_API_KEY`. OpenRouteService has no live traffic and no public transport, and its geocoding of Lima addresses can be weak: a low `geocode_confianza` is reported, never hidden.
