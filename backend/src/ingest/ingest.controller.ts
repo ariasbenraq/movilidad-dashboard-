@@ -6,6 +6,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import { Public } from '../auth/public.decorator.js';
 import { ApiKeyGuard } from './api-key.guard.js';
 import { IngestDto } from './ingest.dto.js';
 import { IngestResult, IngestService } from './ingest.service.js';
@@ -20,6 +21,8 @@ const ingestPipe = new ValidationPipe({
   validationError: { target: false, value: false },
 });
 
+// Public for the session guard: it authenticates with x-api-key instead.
+@Public()
 @Controller('ingest')
 @UseGuards(ApiKeyGuard)
 export class IngestController {

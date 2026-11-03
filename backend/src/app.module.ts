@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { fileURLToPath } from 'node:url';
 import { envValidationSchema } from './config/env.validation.js';
+import { AuthModule } from './auth/auth.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { IngestModule } from './ingest/ingest.module.js';
@@ -15,6 +16,7 @@ import { RedisModule } from './redis/redis.module.js';
       validationSchema: envValidationSchema,
     }),
     DatabaseModule,
+    AuthModule,
     RedisModule,
     HealthModule,
     IngestModule,

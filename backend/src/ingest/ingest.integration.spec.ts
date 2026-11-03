@@ -9,7 +9,9 @@ import { AppModule } from '../app.module.js';
 import { REDIS_CLIENT } from '../redis/redis.constants.js';
 import { CreateMovilidadRegistros1761700000000 } from '../migrations/1761700000000-CreateMovilidadRegistros.js';
 
-const KEY = 'integration-test-key-0123456789abcdef0123';
+// ConfigModule loads .env when AppModule is imported and caches the validated
+// values, so the test must use that key instead of setting its own later.
+const KEY = process.env.INGEST_API_KEY ?? 'integration-test-key-0123456789abcdef0123';
 
 describe.runIf(process.env.RUN_INTEGRATION === '1')('POST /ingest', () => {
   let app: INestApplication;
@@ -44,7 +46,6 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('POST /ingest', () => {
     db.query('SELECT * FROM movilidad_registros ORDER BY id');
 
   beforeAll(async () => {
-    process.env.INGEST_API_KEY = KEY;
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
