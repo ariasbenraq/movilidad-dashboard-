@@ -11,6 +11,7 @@ import { HealthModule } from './health/health.module.js';
 import { ResumenModule } from './resumen/resumen.module.js';
 import { IngestModule } from './ingest/ingest.module.js';
 import { RegistrosModule } from './registros/registros.module.js';
+import { RutasModule } from './rutas/rutas.module.js';
 import { RedisModule } from './redis/redis.module.js';
 
 @Module({
@@ -30,6 +31,7 @@ import { RedisModule } from './redis/redis.module.js';
     DistritosModule,
     AnaliticaModule,
     BusGastosModule,
+    RutasModule,
   ],
 })
 export class AppModule {}

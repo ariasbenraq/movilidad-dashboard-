@@ -7,6 +7,7 @@ import {
   fechaPago,
   horasExtraMonto,
   parseConfig,
+  periodoAnterior,
   proyectar,
   siguientePeriodo,
   toIsoInZone,
@@ -22,6 +23,8 @@ describe('calendar helpers', () => {
     expect(ultimoDia('2026-10')).toBe('2026-10-31');
     expect(siguientePeriodo('2026-12')).toBe('2027-01');
     expect(siguientePeriodo('2026-10')).toBe('2026-11');
+    expect(periodoAnterior('2026-01')).toBe('2025-12');
+    expect(periodoAnterior('2026-10')).toBe('2026-09');
   });
   it('closes a period the day after its last day', () => {
     expect(esCerrado('2026-10', '2026-10-31')).toBe(false);
@@ -179,6 +182,29 @@ describe('parseConfig', () => {
       pagoFinDeSemana: 'previous',
       tarifaHoraExtra: 12.5,
     });
+  });
+  it('reads the traffic factor and the budget months', () => {
+    const c = parseConfig([
+      { key: 'factor_trafico', value: '1.5' },
+      { key: 'presupuesto_meses', value: '6' },
+    ]);
+    expect(c).toMatchObject({ factorTrafico: 1.5, presupuestoMeses: 6 });
+    expect(parseConfig([])).toMatchObject({
+      factorTrafico: 1.3,
+      presupuestoMeses: 3,
+    });
+  });
+  it('ignores an invalid traffic factor or budget months', () => {
+    for (const value of ['0.5', '9', 'abc']) {
+      expect(
+        parseConfig([{ key: 'factor_trafico', value }]).factorTrafico,
+      ).toBe(1.3);
+    }
+    for (const value of ['0', '13', '2.5', 'abc']) {
+      expect(
+        parseConfig([{ key: 'presupuesto_meses', value }]).presupuestoMeses,
+      ).toBe(3);
+    }
   });
   it('ignores invalid values', () => {
     const c = parseConfig([

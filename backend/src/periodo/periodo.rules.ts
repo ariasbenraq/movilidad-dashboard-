@@ -10,6 +10,10 @@ export interface PeriodoConfig {
   pagoFinDeSemana: 'next' | 'previous';
   /** PEN per overtime hour; null when no rate is configured. */
   tarifaHoraExtra: number | null;
+  /** Multiplier on the OpenRouteService taxi duration (it has no live traffic). */
+  factorTrafico: number;
+  /** Closed months averaged for the budget. */
+  presupuestoMeses: number;
 }
 
 export const DEFAULT_CONFIG: PeriodoConfig = {
@@ -18,6 +22,8 @@ export const DEFAULT_CONFIG: PeriodoConfig = {
   pagoDia: 15,
   pagoFinDeSemana: 'next',
   tarifaHoraExtra: null,
+  factorTrafico: 1.3,
+  presupuestoMeses: 3,
 };
 
 /** Reads the config table rows; a missing or invalid value falls back to the default. */
@@ -52,6 +58,21 @@ export function parseConfig(
   if (raw.has('tarifa_hora_extra') && Number.isFinite(tarifa) && tarifa > 0) {
     config.tarifaHoraExtra = tarifa;
   }
+
+  const factor = Number(raw.get('factor_trafico'));
+  if (
+    raw.has('factor_trafico') &&
+    Number.isFinite(factor) &&
+    factor >= 1 &&
+    factor <= 5
+  ) {
+    config.factorTrafico = factor;
+  }
+
+  const meses = Number(raw.get('presupuesto_meses'));
+  if (Number.isInteger(meses) && meses >= 1 && meses <= 12) {
+    config.presupuestoMeses = meses;
+  }
   return config;
 }
 
@@ -68,6 +89,11 @@ export function diasDelMes(periodo: string): number {
 
 export function ultimoDia(periodo: string): string {
   return `${periodo}-${pad(diasDelMes(periodo))}`;
+}
+
+export function periodoAnterior(periodo: string): string {
+  const [year, month] = periodo.split('-').map(Number);
+  return month === 1 ? `${year - 1}-12` : `${year}-${pad(month - 1)}`;
 }
 
 export function siguientePeriodo(periodo: string): string {
