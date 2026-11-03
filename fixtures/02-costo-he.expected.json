@@ -7,5 +7,10 @@
   "he_fin": "16:30",
   "workorder": "W610081149",
   "cliente": "BANCO DE CREDITO DEL PERU",
+  "distrito_origen": "Pueblo Libre",
+  "direccion_origen": "DIRECCION PARTIDA",
+  "distrito_destino": "Jesus María",
+  "direccion_destino": "DIRECCION LLEGADA",
+  "hora_inicio": "16:30",
   "tipo_traslado": null
 }

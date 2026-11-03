@@ -7,5 +7,10 @@
   "he_fin": "18:30",
   "workorder": "W607311610",
   "cliente": "BANCO DE CREDITO DEL PERU",
+  "distrito_origen": "San Borja",
+  "direccion_origen": "DIRECCION PARTIDA",
+  "distrito_destino": "Jesus María",
+  "direccion_destino": "DIRECCION LLEGADA",
+  "hora_inicio": "18:40",
   "tipo_traslado": null
 }

@@ -123,6 +123,35 @@ export class IngestDto {
   @MaxLength(100)
   tipo_traslado?: string | null;
 
+  @trimToNull()
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  distrito_origen?: string | null;
+
+  @trimToNull()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  direccion_origen?: string | null;
+
+  @trimToNull()
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  distrito_destino?: string | null;
+
+  @trimToNull()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  direccion_destino?: string | null;
+
+  @trimToNull()
+  @IsOptional()
+  @Matches(HHMM, { message: '$property must be HH:MM (24 hours)' })
+  hora_inicio?: string | null;
+
   @IsString()
   @Length(1, 20)
   parser_version: string;

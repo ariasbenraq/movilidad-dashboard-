@@ -2,6 +2,7 @@ import {
   addDays,
   heMinutos,
   isValidFechaForm,
+  normalizeDistrito,
   periodoOf,
   reviewReason,
   todayIn,
@@ -64,6 +65,7 @@ describe('reviewReason', () => {
     heFin: null,
     heMinutos: 0,
     possibleDuplicate: false,
+    unknownDistrict: false,
   };
 
   it('is null when nothing needs review', () => {
@@ -92,6 +94,11 @@ describe('reviewReason', () => {
       'possible_duplicate',
     );
   });
+  it('flags unknown_district', () => {
+    expect(reviewReason({ ...ok, unknownDistrict: true })).toBe(
+      'unknown_district',
+    );
+  });
   it('combines flags in the fixed order', () => {
     expect(
       reviewReason({
@@ -101,8 +108,11 @@ describe('reviewReason', () => {
         heFin: null,
         heMinutos: 0,
         possibleDuplicate: true,
+        unknownDistrict: true,
       }),
-    ).toBe('incomplete_overtime,no_amounts,possible_duplicate');
+    ).toBe(
+      'incomplete_overtime,no_amounts,possible_duplicate,unknown_district',
+    );
     expect(
       reviewReason({
         costoMovilidad: 0,
@@ -111,7 +121,16 @@ describe('reviewReason', () => {
         heFin: '17:00',
         heMinutos: 0,
         possibleDuplicate: false,
+        unknownDistrict: false,
       }),
     ).toBe('invalid_overtime,no_amounts');
+  });
+});
+
+describe('normalizeDistrito', () => {
+  it('lowercases, strips accents and collapses spaces', () => {
+    expect(normalizeDistrito('  Jesús   María ')).toBe('jesus maria');
+    expect(normalizeDistrito('SJM')).toBe('sjm');
+    expect(normalizeDistrito('Ñandú')).toBe('nandu');
   });
 });

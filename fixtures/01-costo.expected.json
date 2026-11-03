@@ -7,5 +7,10 @@
   "he_fin": null,
   "workorder": "W610151086",
   "cliente": "BANCO DE CREDITO DEL PERU",
+  "distrito_origen": "Sjm",
+  "direccion_origen": "DIRECCION PARTIDA",
+  "distrito_destino": "Jesus María",
+  "direccion_destino": "DIRECCION LLEGADA",
+  "hora_inicio": "15:00",
   "tipo_traslado": null
 }

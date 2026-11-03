@@ -1,10 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Redis } from 'ioredis';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { REDIS_CLIENT } from '../redis/redis.constants.js';
 import { IngestDto } from './ingest.dto.js';
-import { heMinutos, periodoOf, reviewReason } from './ingest.rules.js';
+import {
+  heMinutos,
+  normalizeDistrito,
+  periodoOf,
+  reviewReason,
+} from './ingest.rules.js';
 
 export type IngestResult =
   | { status: 'created'; id: number }
@@ -47,14 +52,28 @@ export class IngestService {
           possibleDuplicate = rows.length > 0;
         }
 
+        const origen = dto.distrito_origen ?? null;
+        const destino = dto.distrito_destino ?? null;
+        const [origenCanon, destinoCanon] = await Promise.all([
+          this.canonDistrito(manager, origen),
+          this.canonDistrito(manager, destino),
+        ]);
+        const unknownDistrict =
+          (origen !== null && origenCanon === null) ||
+          (destino !== null && destinoCanon === null);
+
         const inserted: { id: string }[] = await manager.query(
           `INSERT INTO movilidad_registros (
              gmail_message_id, received_at, fecha_form, periodo,
              costo_movilidad, otros_gastos, otros_detalle,
              he_inicio, he_fin, he_minutos,
              workorder, cliente, tipo_traslado,
+             distrito_origen, direccion_origen,
+             distrito_destino, direccion_destino,
+             distrito_origen_canon, distrito_destino_canon, hora_inicio,
              review_reason, parser_version
-           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+                     $14,$15,$16,$17,$18,$19,$20,$21,$22)
            ON CONFLICT (gmail_message_id) DO NOTHING
            RETURNING id`,
           [
@@ -71,6 +90,13 @@ export class IngestService {
             workorder,
             dto.cliente ?? null,
             dto.tipo_traslado ?? null,
+            origen,
+            dto.direccion_origen ?? null,
+            destino,
+            dto.direccion_destino ?? null,
+            origenCanon,
+            destinoCanon,
+            dto.hora_inicio ?? null,
             reviewReason({
               costoMovilidad: costo,
               otrosGastos: otros,
@@ -78,6 +104,7 @@ export class IngestService {
               heFin,
               heMinutos: minutos,
               possibleDuplicate,
+              unknownDistrict,
             }),
             dto.parser_version,
           ],
@@ -93,6 +120,19 @@ export class IngestService {
       await this.invalidateCache(periodo);
     }
     return result;
+  }
+
+  /** Canonical district for a free-text one, or null when not mapped. */
+  private async canonDistrito(
+    manager: EntityManager,
+    texto: string | null,
+  ): Promise<string | null> {
+    if (texto === null) return null;
+    const rows: { distrito: string }[] = await manager.query(
+      `SELECT distrito FROM distrito_equivalencias WHERE texto_normalizado = $1`,
+      [normalizeDistrito(texto)],
+    );
+    return rows.length > 0 ? rows[0].distrito : null;
   }
 
   /** Deletes every cache key of the period. Never fails the ingest. */

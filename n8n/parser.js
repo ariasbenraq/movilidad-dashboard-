@@ -3,7 +3,7 @@
 // Pure function: plain-text body of the Google Forms receipt in, JSON out.
 // No dependencies; the file is pasted unchanged into the n8n Code node.
 
-const PARSER_VERSION = '1.0.0';
+const PARSER_VERSION = '2.0.0';
 
 // Every label that can follow a value. A value ends at the next one of these.
 const LABELS = [
@@ -49,6 +49,11 @@ const L_HE_INICIO = /^GENERACION DE HORAS H\. EXTRA\s*-\s*Hora de inicio/i;
 const L_HE_FIN = /^GENERACION DE HORAS H\. EXTRA\s*-\s*Hora de final/i;
 const L_WORKORDER = /^Ingresar la Workorder/i;
 const L_CLIENTE = /^Seleccionar CLIENTE/i;
+const L_DIST_ORIGEN = /^Especificar DISTRITO o DEPARTAMENTO ORIGEN/i;
+const L_DIR_ORIGEN = /^Especificar Direcci[oó]n: PUNTO DE PARTIDA/i;
+const L_DIST_DESTINO = /^Especificar DISTRITO o DEPARTAMENTO DESTINO/i;
+const L_DIR_DESTINO = /^Especificar Direcci[oó]n: PUNTO DE LLEGADA/i;
+const L_HORA_INICIO = /^Especificar HORA INICIO/i;
 
 function isLabel(line) {
   return LABELS.some((re) => re.test(line));
@@ -147,6 +152,11 @@ function parse(body) {
     he_fin: parseTime(lines, L_HE_FIN, 'he_fin'),
     workorder: parseText(lines, L_WORKORDER),
     cliente: parseText(lines, L_CLIENTE),
+    distrito_origen: parseText(lines, L_DIST_ORIGEN),
+    direccion_origen: parseText(lines, L_DIR_ORIGEN),
+    distrito_destino: parseText(lines, L_DIST_DESTINO),
+    direccion_destino: parseText(lines, L_DIR_DESTINO),
+    hora_inicio: parseTime(lines, L_HORA_INICIO, 'hora_inicio'),
     // The receipt lists every option, not only the chosen one.
     tipo_traslado: null,
     parser_version: PARSER_VERSION,

@@ -7,5 +7,10 @@
   "he_fin": null,
   "workorder": "W607021502",
   "cliente": "BANCO DE CREDITO DEL PERU",
+  "distrito_origen": "Surco",
+  "direccion_origen": "DIRECCION PARTIDA",
+  "distrito_destino": "Surco",
+  "direccion_destino": "DIRECCION LLEGADA",
+  "hora_inicio": "11:00",
   "tipo_traslado": null
 }
