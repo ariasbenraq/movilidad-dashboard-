@@ -1,8 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { Redis } from 'ioredis';
 import { DataSource, EntityManager } from 'typeorm';
-import { REDIS_CLIENT } from '../redis/redis.constants.js';
+import { CacheService } from '../cache/cache.service.js';
 import { IngestDto } from './ingest.dto.js';
 import {
   heMinutos,
@@ -12,16 +11,13 @@ import {
 } from './ingest.rules.js';
 
 export type IngestResult =
-  | { status: 'created'; id: number }
-  | { status: 'duplicate' };
+  { status: 'created'; id: number } | { status: 'duplicate' };
 
 @Injectable()
 export class IngestService {
-  private readonly logger = new Logger(IngestService.name);
-
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly cache: CacheService,
   ) {}
 
   async ingest(dto: IngestDto): Promise<IngestResult> {
@@ -38,10 +34,9 @@ export class IngestService {
         let possibleDuplicate = false;
         if (workorder !== null) {
           // Serializes concurrent inserts of the same expense so the flag is consistent.
-          await manager.query(
-            `SELECT pg_advisory_xact_lock(hashtext($1))`,
-            [`${dto.fecha_form}:${workorder}`],
-          );
+          await manager.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [
+            `${dto.fecha_form}:${workorder}`,
+          ]);
           const rows: unknown[] = await manager.query(
             `SELECT 1 FROM movilidad_registros
               WHERE gmail_message_id <> $1 AND fecha_form = $2
@@ -117,7 +112,7 @@ export class IngestService {
     );
 
     if (result.status === 'created') {
-      await this.invalidateCache(periodo);
+      await this.cache.invalidatePeriodo(periodo);
     }
     return result;
   }
@@ -133,28 +128,5 @@ export class IngestService {
       [normalizeDistrito(texto)],
     );
     return rows.length > 0 ? rows[0].distrito : null;
-  }
-
-  /** Deletes every cache key of the period. Never fails the ingest. */
-  private async invalidateCache(periodo: string): Promise<void> {
-    try {
-      const pattern = `movilidad:v1:${periodo}:*`;
-      let cursor = '0';
-      do {
-        const [next, keys] = await this.redis.scan(
-          cursor,
-          'MATCH',
-          pattern,
-          'COUNT',
-          100,
-        );
-        cursor = next;
-        if (keys.length > 0) await this.redis.del(...keys);
-      } while (cursor !== '0');
-    } catch (error) {
-      this.logger.warn(
-        `Cache invalidation failed for ${periodo}: ${(error as Error).message}`,
-      );
-    }
   }
 }

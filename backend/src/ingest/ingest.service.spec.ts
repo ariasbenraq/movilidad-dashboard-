@@ -1,3 +1,4 @@
+import { CacheService } from '../cache/cache.service.js';
 import { IngestService } from './ingest.service.js';
 import type { IngestDto } from './ingest.dto.js';
 
@@ -15,10 +16,13 @@ describe('IngestService cache invalidation', () => {
   });
 
   it('does not fail the ingest when Redis errors', async () => {
-    const redis = { scan: vi.fn().mockRejectedValue(new Error('down')), del: vi.fn() };
+    const redis = {
+      scan: vi.fn().mockRejectedValue(new Error('down')),
+      del: vi.fn(),
+    };
     const service = new IngestService(
       dataSource({ status: 'created', id: 1 }) as never,
-      redis as never,
+      new CacheService(redis as never),
     );
     await expect(service.ingest(dto)).resolves.toEqual({
       status: 'created',
@@ -30,7 +34,7 @@ describe('IngestService cache invalidation', () => {
     const redis = { scan: vi.fn(), del: vi.fn() };
     const service = new IngestService(
       dataSource({ status: 'duplicate' }) as never,
-      redis as never,
+      new CacheService(redis as never),
     );
     await service.ingest(dto);
     expect(redis.scan).not.toHaveBeenCalled();
