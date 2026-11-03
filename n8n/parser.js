@@ -76,16 +76,22 @@ function short(text) {
   return text.length > 40 ? `${text.slice(0, 40)}...` : text;
 }
 
+// The form has shown the date block as "DD x / MM y / AAAA z" and as
+// "MM y / DD x / YYYY z", so each part is read by its own label, in any order.
 function parseDate(lines) {
   const sec = section(lines, L_FECHA);
   if (!sec) throw new Error('fecha_form: label not found');
-  const m = /DD\s+(\d{1,2})\s+\/\s+MM\s+(\d{1,2})\s+\/\s+AAAA\s+(\d{4})/.exec(
-    sec.join(' '),
-  );
-  if (!m) throw new Error('fecha_form: day, month or year missing');
-  const day = Number(m[1]);
-  const month = Number(m[2]);
-  const year = Number(m[3]);
+  const text = sec.join(' ');
+  const part = (re) => {
+    const m = re.exec(text);
+    return m ? Number(m[1]) : null;
+  };
+  const day = part(/\bDD\s+(\d{1,2})\b/i);
+  const month = part(/\bMM\s+(\d{1,2})\b/i);
+  const year = part(/\b(?:AAAA|YYYY)\s+(\d{4})\b/i);
+  if (day === null || month === null || year === null) {
+    throw new Error('fecha_form: day, month or year missing');
+  }
   const d = new Date(Date.UTC(year, month - 1, day));
   if (
     d.getUTCFullYear() !== year ||
