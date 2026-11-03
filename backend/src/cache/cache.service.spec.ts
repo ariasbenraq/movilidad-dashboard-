@@ -45,4 +45,11 @@ describe('CacheService', () => {
     redis.scan.mockRejectedValue(new Error('down'));
     await expect(cache.invalidatePeriodo('2026-10')).resolves.toBeUndefined();
   });
+
+  it('invalidates the district analytics of every period', async () => {
+    redis.scan.mockResolvedValueOnce(['0', ['movilidad:v1:2026-09:distritos']]);
+    await cache.invalidateDistritos();
+    expect(redis.scan.mock.calls[0][2]).toBe('movilidad:v1:*:distritos');
+    expect(redis.del).toHaveBeenCalledWith('movilidad:v1:2026-09:distritos');
+  });
 });
