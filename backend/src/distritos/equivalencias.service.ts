@@ -90,6 +90,10 @@ export class EquivalenciasService {
          SELECT distrito_origen AS texto FROM movilidad_registros
          UNION ALL
          SELECT distrito_destino FROM movilidad_registros
+         UNION ALL
+         SELECT distrito_origen FROM bus_gastos
+         UNION ALL
+         SELECT distrito_destino FROM bus_gastos
        ) t WHERE texto IS NOT NULL`,
     );
     const raws = textosQueNormalizanA(
@@ -110,6 +114,18 @@ export class EquivalenciasService {
        RETURNING id::text AS id, periodo`,
         [canon, raws],
       );
+
+    // Bus expenses keep a canonical name too (no review flag, no cache).
+    await manager.query(
+      `UPDATE bus_gastos SET
+         distrito_origen_canon = CASE WHEN distrito_origen = ANY($2::text[])
+           THEN $1::text ELSE distrito_origen_canon END,
+         distrito_destino_canon = CASE WHEN distrito_destino = ANY($2::text[])
+           THEN $1::text ELSE distrito_destino_canon END
+       WHERE distrito_origen = ANY($2::text[])
+          OR distrito_destino = ANY($2::text[])`,
+      [canon, raws],
+    );
 
     // unknown_district is the last code in the fixed order, so it is stripped
     // and re-appended without disturbing the others.

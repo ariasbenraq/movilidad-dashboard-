@@ -12,6 +12,7 @@ import { AppModule } from '../app.module.js';
 import { CreateMovilidadRegistros1761700000000 } from '../migrations/1761700000000-CreateMovilidadRegistros.js';
 import { ParserV21761800000000 } from '../migrations/1761800000000-ParserV2.js';
 import { CreateConfigFeriados1762000000000 } from '../migrations/1762000000000-CreateConfigFeriados.js';
+import { CreateBusGastos1762100000000 } from '../migrations/1762100000000-CreateBusGastos.js';
 import { REDIS_CLIENT } from '../redis/redis.constants.js';
 import type {
   Equivalencia,
@@ -102,6 +103,7 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('districts', () => {
     cookie = `session=${await app.get(JwtService).signAsync({ username: 'renzo' })}`;
 
     for (const table of [
+      'bus_gastos',
       'feriados',
       'config',
       'distrito_equivalencias',
@@ -113,6 +115,7 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('districts', () => {
     await new CreateMovilidadRegistros1761700000000().up(qr);
     await new ParserV21761800000000().up(qr);
     await new CreateConfigFeriados1762000000000().up(qr);
+    await new CreateBusGastos1762100000000().up(qr);
     await qr.release();
   });
 
