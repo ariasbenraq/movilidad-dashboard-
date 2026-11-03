@@ -34,7 +34,8 @@ export interface Resumen {
   por_revisar: number
   horas_extra_minutos: number
   horas_extra_monto: number | null
-  ultimo_registro_at: string
+  /** null when the period has no records. */
+  ultimo_registro_at: string | null
   fecha_pago: string
 }
 
@@ -85,10 +86,10 @@ export interface RegistrosQuery {
 }
 
 export interface Lugar {
-  distrito: string
+  distrito: string | null
   /** null when the text has no equivalence yet. */
   distrito_canon: string | null
-  direccion: string
+  direccion: string | null
 }
 
 export type ReviewCode =
@@ -101,9 +102,9 @@ export type ReviewCode =
 export interface Registro {
   id: number
   fecha: string
-  hora_inicio: string
-  workorder: string
-  cliente: string
+  hora_inicio: string | null
+  workorder: string | null
+  cliente: string | null
   desde: Lugar
   hacia: Lugar
   costo_movilidad: number

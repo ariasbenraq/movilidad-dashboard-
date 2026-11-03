@@ -3,6 +3,6 @@ import { realApi, type ApiService } from './endpoints'
 
 // The only switch between mocks and the real backend. Flip it when the
 // endpoints exist; components and hooks do not change.
-const USE_MOCKS = true
+const USE_MOCKS = false
 
 export const api: ApiService = USE_MOCKS ? mockApi : realApi

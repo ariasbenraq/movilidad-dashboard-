@@ -2,6 +2,7 @@ import { request } from './client'
 import type {
   AnaliticaDistritos,
   AnaliticaRutas,
+  BusGasto,
   BusGastoRequest,
   BusGastos,
   Diario,
@@ -56,7 +57,7 @@ export const realApi = {
   postBusGasto: (body: BusGastoRequest) =>
     request<{ id: number }>('/bus-gastos', { method: 'POST', body }),
   putBusGasto: (id: number, body: BusGastoRequest) =>
-    request<void>(`/bus-gastos/${id}`, { method: 'PUT', body }),
+    request<BusGasto>(`/bus-gastos/${id}`, { method: 'PUT', body }),
   deleteBusGasto: (id: number) => request<void>(`/bus-gastos/${id}`, { method: 'DELETE' }),
   getAnaliticaRutas: (periodo?: Periodo) =>
     request<AnaliticaRutas>(`/analitica/rutas${buildQuery({ periodo })}`),

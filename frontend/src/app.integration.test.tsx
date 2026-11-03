@@ -86,4 +86,17 @@ describe('app with mock api', () => {
     fireEvent.change(screen.getByLabelText('Periodo'), { target: { value: '2026-09' } })
     expect(await screen.findByText('No hay visitas en este periodo.', {}, { timeout: 4000 })).toBeInTheDocument()
   })
+
+  it('asks for both dates instead of sending a half range', async () => {
+    const user = userEvent.setup()
+    renderApp('/')
+    await user.type(await screen.findByLabelText('Usuario'), 'renzo')
+    await user.type(screen.getByLabelText('Contraseña'), 'x')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    await user.click(await screen.findByRole('link', { name: 'Registros' }))
+    await screen.findByLabelText('Desde', {}, { timeout: 4000 })
+
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-10-01' } })
+    expect(await screen.findByText('Elige las dos fechas para filtrar por rango.')).toBeInTheDocument()
+  })
 })

@@ -37,7 +37,7 @@ export function SummaryStats() {
           <Stat
             label="Registros"
             value={String(data.registros)}
-            hint={`Último: ${formatTimestamp(data.ultimo_registro_at)}`}
+            hint={data.ultimo_registro_at ? `Último: ${formatTimestamp(data.ultimo_registro_at)}` : 'Sin registros'}
           />
           <Stat
             label="Por revisar"

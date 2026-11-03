@@ -18,3 +18,9 @@ window.matchMedia ??= ((query: string) => ({
   removeListener: () => {},
   dispatchEvent: () => false,
 })) as typeof window.matchMedia
+
+// Tests always run against the typed mocks, whatever the app uses at runtime.
+vi.mock('@/api/index', async () => {
+  const { mockApi } = await import('@/api/mocks')
+  return { api: mockApi }
+})
