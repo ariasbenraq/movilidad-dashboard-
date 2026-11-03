@@ -16,4 +16,8 @@ export const envValidationSchema = Joi.object({
   REDIS_PORT: Joi.number().integer().min(1).max(65535).required(),
 
   INGEST_API_KEY: Joi.string().min(32).required(),
+  JWT_SECRET: Joi.string().min(32).required(),
+  CORS_ORIGIN: Joi.string().uri().required(),
+  // Trust Cloudflare's CF-Connecting-IP for the login rate limit. Only behind the proxy.
+  TRUST_PROXY: Joi.boolean().default(false),
 }).unknown(true);
