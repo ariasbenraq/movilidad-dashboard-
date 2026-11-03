@@ -63,7 +63,7 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('read API', () => {
          cliente, review_reason, parser_version, distrito_origen,
          distrito_origen_canon, distrito_destino, distrito_destino_canon,
          direccion_origen, direccion_destino)
-       VALUES ($1, $2, $3, left($3, 7), $4, $5, $6, $7, $8, $9, $10, $11, $12,
+       VALUES ($1, $2, $3, $17, $4, $5, $6, $7, $8, $9, $10, $11, $12,
                '2.0.0', $13, $14, $15, $16, 'DIRECCION PARTIDA', 'DIRECCION LLEGADA')`,
       [
         r.id ?? `seed${++seq}`,
@@ -82,6 +82,7 @@ describe.runIf(process.env.RUN_INTEGRATION === '1')('read API', () => {
         r.origenCanon ?? null,
         r.destino ?? null,
         r.destinoCanon ?? null,
+        r.fecha.slice(0, 7),
       ],
     );
 
