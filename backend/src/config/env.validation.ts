@@ -19,5 +19,7 @@ export const envValidationSchema = Joi.object({
   JWT_SECRET: Joi.string().min(32).required(),
   CORS_ORIGIN: Joi.string().uri().required(),
   // Trust Cloudflare's CF-Connecting-IP for the login rate limit. Only behind the proxy.
+  // OpenRouteService. Optional: without it route distances and times stay null.
+  ORS_API_KEY: Joi.string().allow('').optional(),
   TRUST_PROXY: Joi.boolean().default(false),
 }).unknown(true);
