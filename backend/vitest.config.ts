@@ -8,5 +8,7 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
+    // The integration specs share one Postgres and drop/truncate the same tables.
+    fileParallelism: false,
   },
 });
