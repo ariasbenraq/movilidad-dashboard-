@@ -31,14 +31,23 @@ export class CacheService {
   }
 
   /** Deletes every cache key of the period. Never throws. */
-  async invalidatePeriodo(periodo: string): Promise<void> {
+  invalidatePeriodo(periodo: string): Promise<void> {
+    return this.deleteMatching(cacheKeys.periodoPattern(periodo));
+  }
+
+  /** Deletes the district analytics of every period. Never throws. */
+  invalidateDistritos(): Promise<void> {
+    return this.deleteMatching(cacheKeys.distritosPattern);
+  }
+
+  private async deleteMatching(pattern: string): Promise<void> {
     try {
       let cursor = '0';
       do {
         const [next, keys] = await this.redis.scan(
           cursor,
           'MATCH',
-          cacheKeys.periodoPattern(periodo),
+          pattern,
           'COUNT',
           100,
         );
@@ -47,7 +56,7 @@ export class CacheService {
       } while (cursor !== '0');
     } catch (error) {
       this.logger.warn(
-        `Cache invalidation failed for ${periodo}: ${(error as Error).message}`,
+        `Cache invalidation failed for ${pattern}: ${(error as Error).message}`,
       );
     }
   }
