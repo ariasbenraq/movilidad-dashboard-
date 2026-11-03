@@ -1,14 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { CacheService } from '../cache/cache.service.js';
+import { canonDistrito } from '../distritos/canon.js';
 import { IngestDto } from './ingest.dto.js';
-import {
-  heMinutos,
-  normalizeDistrito,
-  periodoOf,
-  reviewReason,
-} from './ingest.rules.js';
+import { heMinutos, periodoOf, reviewReason } from './ingest.rules.js';
 
 export type IngestResult =
   { status: 'created'; id: number } | { status: 'duplicate' };
@@ -50,8 +46,8 @@ export class IngestService {
         const origen = dto.distrito_origen ?? null;
         const destino = dto.distrito_destino ?? null;
         const [origenCanon, destinoCanon] = await Promise.all([
-          this.canonDistrito(manager, origen),
-          this.canonDistrito(manager, destino),
+          canonDistrito(manager, origen),
+          canonDistrito(manager, destino),
         ]);
         const unknownDistrict =
           (origen !== null && origenCanon === null) ||
@@ -115,18 +111,5 @@ export class IngestService {
       await this.cache.invalidatePeriodo(periodo);
     }
     return result;
-  }
-
-  /** Canonical district for a free-text one, or null when not mapped. */
-  private async canonDistrito(
-    manager: EntityManager,
-    texto: string | null,
-  ): Promise<string | null> {
-    if (texto === null) return null;
-    const rows: { distrito: string }[] = await manager.query(
-      `SELECT distrito FROM distrito_equivalencias WHERE texto_normalizado = $1`,
-      [normalizeDistrito(texto)],
-    );
-    return rows.length > 0 ? rows[0].distrito : null;
   }
 }

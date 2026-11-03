@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { envValidationSchema } from './config/env.validation.js';
 import { AnaliticaModule } from './analitica/analitica.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { BusGastosModule } from './bus-gastos/bus-gastos.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { DistritosModule } from './distritos/distritos.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -28,6 +29,7 @@ import { RedisModule } from './redis/redis.module.js';
     RegistrosModule,
     DistritosModule,
     AnaliticaModule,
+    BusGastosModule,
   ],
 })
 export class AppModule {}

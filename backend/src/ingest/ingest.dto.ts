@@ -18,22 +18,22 @@ const ISO_WITH_OFFSET =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
 /** Trim strings; an empty string becomes null. */
-const trimToNull = () =>
+export const trimToNull = () =>
   Transform(({ value }: { value: unknown }) => {
     if (typeof value !== 'string') return value;
     const trimmed = value.trim();
     return trimmed === '' ? null : trimmed;
   });
 
-function IsFechaForm(options?: ValidationOptions) {
+export function IsFechaForm(options?: ValidationOptions) {
   return ValidateBy(
     {
       name: 'isFechaForm',
       validator: {
         validate: (value: unknown) =>
           typeof value === 'string' && isValidFechaForm(value),
-        defaultMessage: () =>
-          'fecha_form must be a valid date (YYYY-MM-DD) between 2020-01-01 and tomorrow',
+        defaultMessage: (args) =>
+          `${args?.property} must be a valid date (YYYY-MM-DD) between 2020-01-01 and tomorrow`,
       },
     },
     options,
@@ -57,7 +57,7 @@ function IsIsoWithOffset(options?: ValidationOptions) {
   );
 }
 
-const amount = () =>
+export const amount = () =>
   IsNumber(
     { allowNaN: false, allowInfinity: false, maxDecimalPlaces: 2 },
     { message: '$property must be a number with at most 2 decimals' },
