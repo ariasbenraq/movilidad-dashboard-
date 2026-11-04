@@ -6,7 +6,7 @@ import { formatDate, formatPEN } from '@/lib/format'
 import { reviewLabels } from './review'
 
 // Only districts are shown; street addresses stay out of the list on purpose.
-const place = (lugar: Registro['desde']) => lugar.distrito_canon ?? lugar.distrito
+const place = (lugar: Registro['desde']) => lugar.distrito_canon ?? lugar.distrito ?? '—'
 
 export function RegistrosTable({ items }: { items: Registro[] }) {
   return (
@@ -27,10 +27,10 @@ export function RegistrosTable({ items }: { items: Registro[] }) {
           <TableRow key={r.id} data-needs-review={r.needs_review} className={r.needs_review ? 'bg-amber-500/10' : undefined}>
             <TableCell className="whitespace-nowrap">
               {formatDate(r.fecha)}
-              <span className="text-muted-foreground"> · {r.hora_inicio}</span>
+              {r.hora_inicio && <span className="text-muted-foreground"> · {r.hora_inicio}</span>}
             </TableCell>
-            <TableCell className="font-mono text-xs">{r.workorder}</TableCell>
-            <TableCell>{r.cliente}</TableCell>
+            <TableCell className="font-mono text-xs">{r.workorder ?? '—'}</TableCell>
+            <TableCell>{r.cliente ?? '—'}</TableCell>
             <TableCell>{place(r.desde)}</TableCell>
             <TableCell>{place(r.hacia)}</TableCell>
             <TableCell className="text-right tabular-nums">

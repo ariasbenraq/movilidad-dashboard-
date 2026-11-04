@@ -83,7 +83,43 @@ describe('app with mock api', () => {
     await user.click(await screen.findByRole('link', { name: 'Distritos' }))
     await screen.findByText(/Jesús María/, {}, { timeout: 4000 })
 
-    fireEvent.change(screen.getByLabelText('Periodo'), { target: { value: '2026-09' } })
+    // The picker learns the latest month from the API and steps back with the arrow.
+    await user.click(await screen.findByRole('button', { name: 'Mes anterior' }))
+    expect(screen.getByLabelText('Mes')).toHaveValue('9')
     expect(await screen.findByText('No hay visitas en este periodo.', {}, { timeout: 4000 })).toBeInTheDocument()
+  })
+
+  it('asks for both dates instead of sending a half range', async () => {
+    const user = userEvent.setup()
+    renderApp('/')
+    await user.type(await screen.findByLabelText('Usuario'), 'renzo')
+    await user.type(screen.getByLabelText('Contraseña'), 'x')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    await user.click(await screen.findByRole('link', { name: 'Registros' }))
+    await screen.findByLabelText('Desde', {}, { timeout: 4000 })
+
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-10-01' } })
+    expect(await screen.findByText('Elige las dos fechas para filtrar por rango.')).toBeInTheDocument()
+  })
+})
+
+describe('period picker', () => {
+  afterEach(async () => {
+    await logout()
+  })
+
+  it('allows choosing an older month and year with the lists', async () => {
+    const user = userEvent.setup()
+    renderApp('/')
+    await user.type(await screen.findByLabelText('Usuario'), 'renzo')
+    await user.type(screen.getByLabelText('Contraseña'), 'x')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    await screen.findByRole('button', { name: 'Mes anterior' }, { timeout: 4000 })
+
+    expect(screen.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('Año'), { target: { value: '2025' } })
+    expect(screen.getByLabelText('Año')).toHaveValue('2025')
+    await user.click(screen.getByRole('button', { name: 'Mes actual' }))
+    expect(screen.getByLabelText('Año')).toHaveValue('2026')
   })
 })

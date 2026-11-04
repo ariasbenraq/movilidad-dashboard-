@@ -280,20 +280,17 @@ export const mockApi: ApiService = {
   },
 
   putBusGasto: (id, body) => {
-    busGastos = busGastos.map((g) =>
-      g.id === id
-        ? {
-            ...g,
-            fecha: body.fecha,
-            desde: { distrito: body.desde, distrito_canon: null },
-            hacia: { distrito: body.hacia, distrito_canon: null },
-            costo: body.costo,
-            duracion_min: body.duracion_min ?? null,
-            nota: body.nota ?? null,
-          }
-        : g,
-    )
-    return delay(undefined)
+    const updated: BusGasto = {
+      id,
+      fecha: body.fecha,
+      desde: { distrito: body.desde, distrito_canon: null },
+      hacia: { distrito: body.hacia, distrito_canon: null },
+      costo: body.costo,
+      duracion_min: body.duracion_min ?? null,
+      nota: body.nota ?? null,
+    }
+    busGastos = busGastos.map((g) => (g.id === id ? updated : g))
+    return delay(updated)
   },
 
   deleteBusGasto: (id) => {

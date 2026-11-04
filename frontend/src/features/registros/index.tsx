@@ -18,11 +18,13 @@ export function RegistrosPage() {
 
   // The contract says `periodo` wins over `desde`/`hasta`, so an explicit date range
   // replaces the selected period instead of being ignored.
-  const hasRange = range.desde !== '' || range.hasta !== ''
+  // The backend rejects a range with only one end (400), so it applies only when both are set.
+  const hasRange = range.desde !== '' && range.hasta !== ''
+  const halfRange = !hasRange && (range.desde !== '' || range.hasta !== '')
   const { data, isLoading, isError, isFetching, refetch } = useRegistros({
     periodo: hasRange ? undefined : periodo,
-    desde: range.desde || undefined,
-    hasta: range.hasta || undefined,
+    desde: hasRange ? range.desde : undefined,
+    hasta: hasRange ? range.hasta : undefined,
     por_revisar: soloRevisar || undefined,
     page,
     limit: LIMIT,
@@ -37,6 +39,9 @@ export function RegistrosPage() {
         soloRevisar={soloRevisar}
         onSoloRevisarChange={(next) => { setSoloRevisar(next); setPage(1) }}
       />
+      {halfRange && (
+        <p className="text-muted-foreground text-sm">Elige las dos fechas para filtrar por rango.</p>
+      )}
       <Card>
         <CardContent>
           <BlockState
