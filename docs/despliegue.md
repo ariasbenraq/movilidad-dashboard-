@@ -204,6 +204,8 @@ Restaurar: `docker exec -i <contenedor postgres> pg_restore -U <user> -d <db> --
 
 ## 9. Reutilizar esta plantilla en otro proyecto
 
+Para un proyecto nuevo, la guía paso a paso es `docs/guia-nuevo-proyecto.md`, y `deploy/scaffold.sh` copia el kit de despliegue cambiando los nombres. La tabla siguiente explica qué se cambia y dónde, por si prefieres hacerlo a mano.
+
 Copiar `deploy/`, `.github/`, los Dockerfiles y este documento, y cambiar:
 
 | Qué | Dónde |
