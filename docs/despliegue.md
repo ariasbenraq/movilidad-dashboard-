@@ -72,7 +72,38 @@ En *Access controls* (formato `grants`): `tagOwners` con `tag:ci`, `autogroup:me
 Además: crear el Environment `production` (con aprobación manual si se quiere) y proteger `main` (PR obligatorio y CI en verde).
 
 ### 2.4 `.env` del servidor
-Copiar `deploy/production.env.example` a `/opt/movilidad/.env`, `chmod 600`, propietario `deploy`, y rellenar. `INGEST_API_KEY` y `JWT_SECRET` con `openssl rand -hex 32` (secretos nuevos, distintos a los de desarrollo). Sin comillas ni espacios.
+Se crea una sola vez, desde tu usuario administrador (con `sudo`), no como `deploy`. Los secretos se generan en el momento y no se ven en pantalla.
+
+```bash
+sudo install -m 600 -o deploy -g deploy /dev/null /opt/movilidad/.env
+sudo tee /opt/movilidad/.env >/dev/null <<EOF
+NODE_ENV=production
+PORT=3000
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=movilidad
+DB_PASSWORD=$(openssl rand -hex 24)
+DB_NAME=movilidad
+REDIS_HOST=redis
+REDIS_PORT=6379
+INGEST_API_KEY=$(openssl rand -hex 32)
+JWT_SECRET=$(openssl rand -hex 32)
+CORS_ORIGIN=https://movilidades.hamstitors.trade
+TRUST_PROXY=true
+ORS_API_KEY=
+EOF
+```
+
+El comando se ejecuta **una vez**: repetirlo regenera los secretos y `DB_PASSWORD` dejaría de coincidir con la que Postgres guardó al crear su volumen. Para cambiar un valor después: `sudo nano /opt/movilidad/.env` y editar solo esa línea. **Nunca pegues el comando `sudo tee` ni la línea `EOF` dentro del archivo**: el archivo solo contiene líneas `CLAVE=valor`.
+
+Comprobación sin mostrar secretos. La primera orden no debe imprimir nada; la segunda debe mostrar `-rw------- … deploy deploy`; la tercera, largos de 64:
+```bash
+sudo grep -n -v -E '^[[:space:]]*(#.*)?$|^[A-Za-z_][A-Za-z0-9_]*=[^[:space:]"'"'"'$`\\]*$' /opt/movilidad/.env
+sudo ls -l /opt/movilidad/.env
+sudo awk -F= '/^(INGEST_API_KEY|JWT_SECRET)=/{print $1, length($2)}' /opt/movilidad/.env
+```
+
+Reglas: sin comillas, espacios, `$` ni barras invertidas en los valores (usa secretos hexadecimales). `deploy.sh` no ejecuta este archivo: lo valida y, si una línea no cumple, solo informa su número, sin mostrar el contenido. `INGEST_API_KEY` también se copia a la credencial de n8n (sección 3).
 
 ### 2.5 Cloudflare
 *Zero Trust → Networks → Tunnels → tu túnel → Public hostnames*: añadir `movilidades.hamstitors.trade` → HTTP → `caddy:80`, igual que los demás sitios. Cloudflare crea el DNS.
@@ -167,6 +198,7 @@ Restaurar: `docker exec -i <contenedor postgres> pg_restore -U <user> -d <db> --
 | `denied` / `unauthorized` al hacer pull | Falta `docker login ghcr.io` como usuario `deploy`, o el PAT caducó |
 | El deploy falla y el sitio sigue en la versión anterior | Es el comportamiento esperado. Ver el informe al final del log del paso *Deploy* |
 | 502 en el dominio | `mov-api`/`mov-web` no están en la red `edge` o no están sanos: `docker service ps` |
+| `Invalid .env: line(s) N are not KEY=VALUE` en el paso *Deploy* | La línea N de `/opt/movilidad/.env` no tiene el formato `CLAVE=valor` (texto pegado, comillas, espacios o `$`). Corregirla con `sudo nano` y relanzar el workflow |
 | El backend no arranca ("Invalid environment configuration") | Falta una variable en `/opt/movilidad/.env` o `INGEST_API_KEY`/`JWT_SECRET` tienen menos de 32 caracteres |
 | Cambié el `.env` y no se aplica | Las variables se leen al desplegar: lanzar un deploy (o `docker service update --force movilidad_mov-api`) |
 

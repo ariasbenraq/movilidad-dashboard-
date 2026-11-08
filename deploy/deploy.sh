@@ -26,11 +26,25 @@ export TAG
 API_IMAGE="$REGISTRY/movilidad-backend:$TAG"
 WEB_IMAGE="$REGISTRY/movilidad-frontend:$TAG"
 
-# Values for ${...} in docker-stack.yml. Secrets stay in this process only.
-set -a
-# shellcheck disable=SC1091
-. ./.env
-set +a
+# .env is data, never code: it is not sourced, and nothing from it is ever printed.
+# Every line must be blank, a comment, or KEY=VALUE where VALUE has no spaces,
+# quotes, $, backticks or backslashes (use hex secrets). A bad line is reported
+# by number only, so a malformed file cannot leak into the CI log.
+bad_lines="$(grep -n -v -E "^[[:space:]]*(#.*)?$|^[A-Za-z_][A-Za-z0-9_]*=[^[:space:]\"'\$\`\\\\]*$" .env |
+  cut -d: -f1 | head -5 | tr '\n' ' ' || true)"
+if [ -n "$bad_lines" ]; then
+  echo "Invalid .env: line(s) ${bad_lines}are not KEY=VALUE (content not shown)." >&2
+  exit 1
+fi
+
+env_value() { grep -E "^$1=" .env | tail -n 1 | cut -d= -f2-; }
+
+# Only the values that docker-stack.yml interpolates. The rest of .env reaches
+# the API through env_file, and Swarm reads that file itself.
+DB_USER="$(env_value DB_USER)"
+DB_PASSWORD="$(env_value DB_PASSWORD)"
+DB_NAME="$(env_value DB_NAME)"
+export DB_USER DB_PASSWORD DB_NAME
 
 db_ready() {
   docker network inspect "${STACK}_internal" >/dev/null 2>&1 &&
