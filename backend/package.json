@@ -22,7 +22,9 @@
     "migration:generate": "typeorm-ts-node-esm migration:generate -d src/database/data-source.ts",
     "migration:run": "typeorm-ts-node-esm migration:run -d src/database/data-source.ts",
     "user:create": "node --loader ts-node/esm --no-warnings src/cli/user-create.ts",
-    "migration:revert": "typeorm-ts-node-esm migration:revert -d src/database/data-source.ts"
+    "migration:revert": "typeorm-ts-node-esm migration:revert -d src/database/data-source.ts",
+    "migration:run:prod": "node dist/database/run-migrations.js",
+    "user:create:prod": "node dist/cli/user-create.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

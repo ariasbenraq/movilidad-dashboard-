@@ -1,0 +1,107 @@
+# Docker Swarm stack for movilidades.hamstitors.trade.
+# Deployed by deploy.sh (never by hand): `docker stack deploy -c docker-stack.yml movilidad`.
+#
+# Required shell variables (deploy.sh exports them): TAG (git SHA), DB_USER,
+# DB_PASSWORD, DB_NAME (loaded from .env). REGISTRY is optional.
+#
+# Network layout:
+#   internal  private overlay: postgres, redis and the API. No published ports.
+#   edge      existing overlay shared with Caddy and n8n. Only mov-api and
+#             mov-web join it, under those unique names, so they cannot clash
+#             with other stacks (atm uses "web", for instance).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: &logging
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    deploy:
+      replicas: 1
+      # dnsrr resolves straight to the container IP. The default VIP mode drops
+      # idle connections after ~15 minutes, which hurts pooled DB connections.
+      endpoint_mode: dnsrr
+      restart_policy: { condition: any, delay: 5s }
+      update_config: { order: stop-first }
+      resources:
+        limits: { memory: 1G }
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    logging: *logging
+    deploy:
+      replicas: 1
+      # dnsrr resolves straight to the container IP. The default VIP mode drops
+      # idle connections after ~15 minutes, which hurts pooled DB connections.
+      endpoint_mode: dnsrr
+      restart_policy: { condition: any, delay: 5s }
+      update_config: { order: stop-first }
+      resources:
+        limits: { memory: 256M }
+
+  mov-api:
+    image: ${REGISTRY:-ghcr.io/ariasbenraq}/movilidad-backend:${TAG:?TAG is required}
+    env_file: [.env]
+    networks: [internal, edge]
+    logging: *logging
+    deploy:
+      replicas: 1
+      restart_policy: { condition: any, delay: 5s }
+      update_config:
+        order: start-first
+        parallelism: 1
+        monitor: 30s
+        failure_action: rollback
+      rollback_config: { order: start-first }
+      resources:
+        limits: { memory: 768M }
+
+  mov-web:
+    image: ${REGISTRY:-ghcr.io/ariasbenraq}/movilidad-frontend:${TAG:?TAG is required}
+    networks: [edge]
+    logging: *logging
+    deploy:
+      replicas: 1
+      restart_policy: { condition: any, delay: 5s }
+      update_config:
+        order: start-first
+        parallelism: 1
+        monitor: 15s
+        failure_action: rollback
+      rollback_config: { order: start-first }
+      resources:
+        limits: { memory: 128M }
+
+networks:
+  internal:
+    driver: overlay
+    attachable: true # lets deploy.sh run migrations with `docker run --network`
+  edge:
+    external: true
+    name: edge
+
+volumes:
+  postgres-data:
+  redis-data:
