@@ -139,3 +139,25 @@ test('throws when the start time is out of range', () => {
     /hora_inicio/,
   );
 });
+
+test('date block with MM / DD / YYYY labels in any order', () => {
+  const swapped = base().replace(
+    /DD\s+21\s+\/\s+MM\s+10\s+\/\s+AAAA\s+2026/,
+    'MM\n\n10\n\n/\n\nDD\n\n21\n\n/\n\nYYYY\n\n2026',
+  );
+  assert.notEqual(swapped, base());
+  assert.equal(parse(swapped).fecha_form, '2026-10-21');
+  const reversed = base().replace(
+    /DD\s+21\s+\/\s+MM\s+10\s+\/\s+AAAA\s+2026/,
+    'AAAA 2026 / MM 10 / DD 21',
+  );
+  assert.equal(parse(reversed).fecha_form, '2026-10-21');
+});
+
+test('throws when a date part is missing in the swapped layout', () => {
+  const noYear = base().replace(
+    /DD\s+21\s+\/\s+MM\s+10\s+\/\s+AAAA\s+2026/,
+    'MM 10 / DD 21 / YYYY',
+  );
+  assert.throws(() => parse(noYear), /fecha_form/);
+});
